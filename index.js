@@ -65,7 +65,7 @@ client.on('message', async message => {
 
                 // Se o usuário não tiver um ranking, cria um novo
                 if (!userRanking) {
-                    userRanking = new Ranking({ userId, userName, totalDays: 1, checkIns: [{ date: today, language }] });
+                    userRanking = new Ranking({ userId, userName, totalCheckIns: 1, checkIns: [{ date: today, language }] });
                     await userRanking.save();
                     client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
                 } else {
@@ -78,7 +78,7 @@ client.on('message', async message => {
                         client.sendMessage(message.from, `${userName}, você já fez seu check-in hoje para o idioma ${language}.`);
                     } else {
                         // Atualiza o ranking com o novo check-in
-                        userRanking.totalDays += 1;
+                        userRanking.totalCheckIns += 1;
                         userRanking.checkIns.push({ date: new Date(), language });
                         await userRanking.save();
                         client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
@@ -101,40 +101,40 @@ client.on('message', async message => {
             lastYear.setFullYear(today.getFullYear() - 1);
 
             // Ranking Geral
-            const rankingGeral = await Ranking.find().sort({ totalDays: -1 });
+            const rankingGeral = await Ranking.find().sort({ totalCheckIns: -1 });
             // Ranking Anual
             const rankingAnual = await Ranking.find({ 
                 'checkIns.date': { $gte: lastYear }
-            }).sort({ totalDays: -1 });
+            }).sort({ totalCheckIns: -1 });
             // Ranking Mensal
             const rankingMensal = await Ranking.find({ 
                 'checkIns.date': { $gte: lastMonth }
-            }).sort({ totalDays: -1 });
+            }).sort({ totalCheckIns: -1 });
             // Ranking Semanal
             const rankingSemanal = await Ranking.find({ 
                 'checkIns.date': { $gte: lastWeek }
-            }).sort({ totalDays: -1 });
+            }).sort({ totalCheckIns: -1 });
 
             let rankingMessage = '*Ranking*\n\n';
 
             rankingMessage += '*Geral:*\n';
             rankingGeral.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalDays} check-ins\n`;
+                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalCheckIns} check-ins\n`;
             });
 
             rankingMessage += '\n*Anual:*\n';
             rankingAnual.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalDays} check-ins\n`;
+                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalCheckIns} check-ins\n`;
             });
 
             rankingMessage += '\n*Mensal:*\n';
             rankingMensal.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalDays} check-ins\n`;
+                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalCheckIns} check-ins\n`;
             });
 
             rankingMessage += '\n*Semanal:*\n';
             rankingSemanal.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalDays} check-ins\n`;
+                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalCheckIns} check-ins\n`;
             });
 
             client.sendMessage(message.from, rankingMessage);
