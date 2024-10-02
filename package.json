@@ -1,7 +1,7 @@
 {
   "name": "whats_bot",
   "version": "1.0.0",
-  "main": "bot_whats.js",
+  "main": "index.js",
   "scripts": {
     "start": "node --watch ."
   },
