@@ -3,8 +3,11 @@ const mongoose = require('mongoose');
 const rankingSchema = new mongoose.Schema({
     userId: String,
     userName: String,
-    points: { type: Number, default: 0 },
-    lastUpdated: { type: Date, default: Date.now } // Campo para rastrear a data de pontuação
+    totalDays: { type: Number, default: 0 },
+    checkIns: [{
+        date: Date,
+        language: String
+    }]
 });
 
 const Ranking = mongoose.model('Ranking', rankingSchema);

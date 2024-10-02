@@ -5,12 +5,9 @@ const Ranking = require('./ranking'); // Certifique-se de que o caminho está co
 require('dotenv').config(); // Carrega as variáveis do .env
 
 // Conecte ao MongoDB Atlas usando a variável de ambiente
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('Conectado ao MongoDB!'))
-.catch(err => console.error('Erro ao conectar ao MongoDB:', err));
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('Conectado ao MongoDB!'))
+    .catch(err => console.error('Erro ao conectar ao MongoDB:', err));
 
 // Cria um novo cliente do WhatsApp
 const client = new Client({
@@ -26,65 +23,104 @@ client.on('ready', () => {
 });
 
 client.on('message', async message => {
+    // Função para normalizar o texto (remover acentos e deixar minúsculas)
+    const normalizeText = (text) => {
+        return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    }
+
+    const normalizedMessage = normalizeText(message.body);
+
+    // Lista de idiomas aceitos
+    const acceptedLanguages = ['ingles', 'frances', 'italiano', 'espanhol', 'japones'];
+
     if (message.from.includes('@g.us')) {
-        // Verifica se a mensagem é "Tá pago ingles"
-        if (message.body.toLowerCase() === 'tá pago ingles') {
+        // Verifica se a mensagem é um check-in (começa com "ta pago")
+        if (normalizedMessage.startsWith('ta pago')) {
             const userId = message.author || message.from;
             const userName = message._data.notifyName;
 
-            // Atualiza ou cria a pontuação para o autor da mensagem
-            const userRanking = await Ranking.findOne({ userId });
-            if (userRanking) {
-                userRanking.points += 1;
-                userRanking.lastUpdated = new Date(); // Atualiza a data
-                await userRanking.save();
+            // Obtém o idioma informado (ex.: ingles, frances)
+            const language = normalizedMessage.split(' ')[2];
+
+            // Verifica se o idioma é válido
+            if (acceptedLanguages.includes(language)) {
+                const today = new Date().setHours(0, 0, 0, 0); // Apenas a data atual
+
+                // Encontra o ranking do usuário
+                let userRanking = await Ranking.findOne({ userId });
+
+                // Se o usuário não tiver um ranking, cria um novo
+                if (!userRanking) {
+                    userRanking = new Ranking({ userId, userName, totalDays: 1, checkIns: [{ date: today, language }] });
+                    await userRanking.save();
+                    client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
+                } else {
+                    // Verifica se já fez o check-in hoje
+                    const alreadyCheckedInToday = userRanking.checkIns.some(checkIn => 
+                        new Date(checkIn.date).setHours(0, 0, 0, 0) === today
+                    );
+
+                    if (alreadyCheckedInToday) {
+                        client.sendMessage(message.from, `${userName}, você já fez seu check-in hoje para o idioma ${language}.`);
+                    } else {
+                        // Atualiza o ranking com o novo check-in
+                        userRanking.totalDays += 1;
+                        userRanking.checkIns.push({ date: new Date(), language });
+                        await userRanking.save();
+                        client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
+                    }
+                }
             } else {
-                const newRanking = new Ranking({ userId, userName, points: 1, lastUpdated: new Date() });
-                await newRanking.save();
+                client.sendMessage(message.from, `O idioma "${language}" não é aceito. Por favor, use um dos seguintes: ingles, frances, italiano, espanhol, japones.`);
             }
-
-            client.sendMessage(message.from, `Parabéns ${userName}, você ganhou 1 ponto!`);
-        }
-        
-        // Verifica se a mensagem é para exibir ranking geral
-        if (message.body.toLowerCase() === '!ranking geral') {
-            const ranking = await Ranking.find().sort({ points: -1 });
-            let rankingMessage = '*Ranking Geral dos Estudantes*\n\n';
-            
-            ranking.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.points} pontos\n`;
-            });
-
-            client.sendMessage(message.from, rankingMessage);
         }
 
-        // Verifica se a mensagem é para exibir ranking semanal
-        if (message.body.toLowerCase() === '!ranking semanal') {
-            // Filtra por data dentro da última semana
+        // Verifica se a mensagem é para exibir ranking
+        if (normalizedMessage === '!ranking') {
+            const today = new Date();
             const lastWeek = new Date();
-            lastWeek.setDate(lastWeek.getDate() - 7);
+            const lastMonth = new Date();
+            const lastYear = new Date();
 
-            const ranking = await Ranking.find({ lastUpdated: { $gte: lastWeek } }).sort({ points: -1 });
-            let rankingMessage = '*Ranking Semanal dos Estudantes*\n\n';
-            
-            ranking.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.points} pontos\n`;
+            lastWeek.setDate(today.getDate() - 7);
+            lastMonth.setMonth(today.getMonth() - 1);
+            lastYear.setFullYear(today.getFullYear() - 1);
+
+            // Ranking Geral
+            const rankingGeral = await Ranking.find().sort({ totalDays: -1 });
+            // Ranking Anual
+            const rankingAnual = await Ranking.find({ 
+                'checkIns.date': { $gte: lastYear }
+            }).sort({ totalDays: -1 });
+            // Ranking Mensal
+            const rankingMensal = await Ranking.find({ 
+                'checkIns.date': { $gte: lastMonth }
+            }).sort({ totalDays: -1 });
+            // Ranking Semanal
+            const rankingSemanal = await Ranking.find({ 
+                'checkIns.date': { $gte: lastWeek }
+            }).sort({ totalDays: -1 });
+
+            let rankingMessage = '*Ranking*\n\n';
+
+            rankingMessage += '*Geral:*\n';
+            rankingGeral.forEach((user, index) => {
+                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalDays} check-ins\n`;
             });
 
-            client.sendMessage(message.from, rankingMessage);
-        }
+            rankingMessage += '\n*Anual:*\n';
+            rankingAnual.forEach((user, index) => {
+                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalDays} check-ins\n`;
+            });
 
-        // Verifica se a mensagem é para exibir ranking mensal
-        if (message.body.toLowerCase() === '!ranking mensal') {
-            // Filtra por data dentro do último mês
-            const lastMonth = new Date();
-            lastMonth.setMonth(lastMonth.getMonth() - 1);
+            rankingMessage += '\n*Mensal:*\n';
+            rankingMensal.forEach((user, index) => {
+                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalDays} check-ins\n`;
+            });
 
-            const ranking = await Ranking.find({ lastUpdated: { $gte: lastMonth } }).sort({ points: -1 });
-            let rankingMessage = '*Ranking Mensal dos Estudantes*\n\n';
-            
-            ranking.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.points} pontos\n`;
+            rankingMessage += '\n*Semanal:*\n';
+            rankingSemanal.forEach((user, index) => {
+                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalDays} check-ins\n`;
             });
 
             client.sendMessage(message.from, rankingMessage);
