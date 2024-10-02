@@ -4,6 +4,12 @@ const mongoose = require('mongoose');
 const Ranking = require('./ranking'); // Certifique-se de que o caminho está correto
 require('dotenv').config(); // Carrega as variáveis do .env
 
+// Lista de IDs de grupos permitidos
+const allowedGroups = [
+    '120363345949387736@g.us' // Grupo do ta pago linguas
+];
+
+
 // Conecte ao MongoDB Atlas usando a variável de ambiente
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('Conectado ao MongoDB!'))
@@ -34,6 +40,14 @@ client.on('message', async message => {
     const acceptedLanguages = ['ingles', 'frances', 'italiano', 'espanhol', 'japones'];
 
     if (message.from.includes('@g.us')) {
+
+        if (normalizedMessage.startsWith('id do grupo')) {
+            console.log(`ID do Grupo: ${message.from}`);
+        }
+
+        if (!allowedGroups.includes(message.from)) // Apenas grupos permitidos podem usar o BOT
+            return;
+
         // Verifica se a mensagem é um check-in (começa com "ta pago")
         if (normalizedMessage.startsWith('ta pago')) {
             const userId = message.author || message.from;
