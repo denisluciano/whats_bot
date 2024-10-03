@@ -1,13 +1,13 @@
-2024/10/02-18:27:45.421 f303 Reusing MANIFEST /Users/denisluciano/Workspace/whats_bot/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2024/10/02-18:27:45.421 f303 Recovering log #66
-2024/10/02-18:27:45.432 f303 Reusing old log /Users/denisluciano/Workspace/whats_bot/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000066.log 
-2024/10/02-18:27:47.454 9d03 Level-0 table #71: started
-2024/10/02-18:27:47.466 9d03 Level-0 table #71: 135661 bytes OK
-2024/10/02-18:27:47.478 9d03 Delete type=0 #66
-2024/10/02-18:27:47.479 9d03 Manual compaction at level-0 from '\x00\x1f\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00 \x00\x00\x00' @ 0 : 0; will stop at (end)
-2024/10/02-18:27:49.333 f303 Compacting 1@1 + 1@2 files
-2024/10/02-18:27:49.383 f303 Generated table #72@1: 29506 keys, 1053082 bytes
-2024/10/02-18:27:49.383 f303 Compacted 1@1 + 1@2 files => 1053082 bytes
-2024/10/02-18:27:49.390 f303 compacted to: files[ 0 0 1 0 0 0 0 ]
-2024/10/02-18:27:49.390 f303 Delete type=2 #71
-2024/10/02-18:27:49.390 f303 Delete type=2 #68
+2024/10/02-18:30:42.496 8a03 Reusing MANIFEST /Users/denisluciano/Workspace/whats_bot/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2024/10/02-18:30:42.496 8a03 Recovering log #70
+2024/10/02-18:30:42.515 8a03 Reusing old log /Users/denisluciano/Workspace/whats_bot/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000070.log 
+2024/10/02-18:30:44.393 16703 Level-0 table #75: started
+2024/10/02-18:30:44.411 16703 Level-0 table #75: 296424 bytes OK
+2024/10/02-18:30:44.422 16703 Delete type=0 #70
+2024/10/02-18:30:44.424 16703 Manual compaction at level-0 from '\x00 \x00\x00\x00' @ 72057594037927935 : 1 .. '\x00!\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/10/02-18:30:46.498 16703 Compacting 1@1 + 1@2 files
+2024/10/02-18:30:46.543 16703 Generated table #76@1: 30657 keys, 1088946 bytes
+2024/10/02-18:30:46.543 16703 Compacted 1@1 + 1@2 files => 1088946 bytes
+2024/10/02-18:30:46.553 16703 compacted to: files[ 0 0 1 0 0 0 0 ]
+2024/10/02-18:30:46.554 16703 Delete type=2 #75
+2024/10/02-18:30:46.554 16703 Delete type=2 #72

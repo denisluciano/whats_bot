@@ -143,23 +143,3 @@ client.on('message', async message => {
 });
 
 client.initialize();
-
-
-/*
-    Daqui pra baixo é só para funcionar no render.com 
-    Lá exige que tenha um servidor rodando
-*/
-
-const express = require('express');
-
-// Adicionando o servidor HTTP básico
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-    res.send('Bot está rodando!');
-});
-
-app.listen(PORT, () => {
-    console.log(`Servidor HTTP rodando na porta ${PORT}`);
-});
