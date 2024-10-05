@@ -1,4 +1,4 @@
-const qrcode = require('qrcode-terminal');
+const qrcode = require("qrcode");
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const mongoose = require('mongoose');
 const Ranking = require('./ranking'); // Certifique-se de que o caminho está correto
@@ -15,14 +15,44 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('Conectado ao MongoDB!'))
     .catch(err => console.error('Erro ao conectar ao MongoDB:', err));
 
-// Cria um novo cliente do WhatsApp
-const client = new Client({
-    authStrategy: new LocalAuth()
-});
+// // Cria um novo cliente do WhatsApp
+// const client = new Client({
+//     authStrategy: new LocalAuth()
+// });
 
-client.on('qr', qr => {
-    qrcode.generate(qr, {small: true});
-});
+// Creating a new instance of the client
+const client = new Client({
+    puppeteer: {
+      // Runs Chrome in headless mode (without a user interface).
+      headless: true,
+      args: [
+        // Disables Chrome's sandboxing features. This is necessary when running
+        // Puppeteer in certain environments like Docker containers.
+        "--no-sandbox",
+        // Additional sandboxing flag to disable setuid sandbox.
+        "--disable-setuid-sandbox",
+      ],
+    },
+    // Setting the webVersionCache option
+    webVersionCache: {
+      // Setting the type as "remote", which means that the WhatsApp Web version will be fetched from a remote URL
+      type: "remote",
+      // Setting the remote path for the WhatsApp Web version
+      remotePath: "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1017091165-alpha.html",
+    },
+  });
+
+
+// This event is fired when whatsapp-web.js generates a new QR code
+client.on("qr", async (qr) => {
+    // Here we are using the qrcode library to generate a QR Code and save it as a file
+    try {
+      await qrcode.toFile("./qrcode.png", qr);
+      console.log("QR Code saved as qrcode.png");
+    } catch (err) {
+      console.error(err);
+    }
+  });
 
 client.on('ready', () => {
     console.log('Client is ready!');

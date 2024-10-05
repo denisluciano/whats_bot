@@ -1,3 +1,4 @@
 /node_modules
 #/.wwebjs*   -> Como to usando o render, que não salva nada em disco, preciso já subir o arquivo de seção. O que não é recomendado, mas dada as circunstâncias
 .env
+qrcode.png
