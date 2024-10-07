@@ -6,7 +6,8 @@ require('dotenv').config(); // Carrega as variáveis do .env
 
 // Lista de IDs de grupos permitidos
 const allowedGroups = [
-    '120363345949387736@g.us' // Grupo do ta pago linguas
+    '120363345949387736@g.us', // Grupo do ta pago linguas
+    '120363326956975856@g.us' // Grupo de teste
 ];
 
 
@@ -28,6 +29,7 @@ const client = new Client({
         "--disable-setuid-sandbox",
       ],
     },
+    authStrategy: new LocalAuth(), // Adiciona essa linha para salvar o estado da sessão
     // Setting the webVersionCache option
     webVersionCache: {
       // Setting the type as "remote", which means that the WhatsApp Web version will be fetched from a remote URL
@@ -82,63 +84,105 @@ client.on('message', async message => {
             const language = normalizedMessage.split(' ')[2];
 
             // Verifica se o idioma é válido
-            if (acceptedLanguages.includes(language)) {
-                const today = new Date().setHours(0, 0, 0, 0); // Apenas a data atual
-
-                // Encontra o ranking do usuário
-                let userRanking = await Ranking.findOne({ userId });
-
-                // Se o usuário não tiver um ranking, cria um novo
-                if (!userRanking) {
-                    userRanking = new Ranking({ userId, userName, totalCheckIns: 1, checkIns: [{ date: today, language }] });
-                    await userRanking.save();
-                    client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
-                } else {
-                    // Verifica se já fez o check-in hoje
-                    const alreadyCheckedInToday = userRanking.checkIns.some(checkIn => 
-                        new Date(checkIn.date).setHours(0, 0, 0, 0) === today
-                    );
-
-                    if (alreadyCheckedInToday) {
-                        client.sendMessage(message.from, `${userName}, você já fez seu check-in hoje para o idioma ${language}.`);
-                    } else {
-                        // Atualiza o ranking com o novo check-in
-                        userRanking.totalCheckIns += 1;
-                        userRanking.checkIns.push({ date: new Date(), language });
-                        await userRanking.save();
-                        client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
-                    }
-                }
-            } else {
+            if (!acceptedLanguages.includes(language)) {
                 client.sendMessage(message.from, `O idioma "${language}" não é aceito. Por favor, use um dos seguintes: ingles, frances, italiano, espanhol, japones.`);
             }
+            
+            const today = new Date(); // Mantém a data e a hora atual
+
+            // Encontra o ranking do usuário
+            let userRanking = await Ranking.findOne({ userId });
+
+            // Se o usuário não tiver um ranking, cria um novo
+            if (!userRanking) {
+                userRanking = new Ranking({ userId, userName, checkIns: [{ date: today, language }] });
+                await userRanking.save();
+                client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
+            } else {
+                // Verifica se já fez o check-in hoje para o idioma informado
+                const alreadyCheckedInToday = userRanking.checkIns.some(checkIn => {
+                    const checkInDate = new Date(checkIn.date);
+                    return (
+                        checkInDate.getFullYear() === today.getFullYear() &&
+                        checkInDate.getMonth() === today.getMonth() &&
+                        checkInDate.getDate() === today.getDate() &&
+                        checkIn.language === language
+                    );
+                });
+
+                if (alreadyCheckedInToday) {
+                    client.sendMessage(message.from, `${userName}, você já fez seu check-in hoje para o idioma ${language}.`);
+                } else {
+                    // Atualiza o ranking com o novo check-in, incluindo data e hora
+                    userRanking.checkIns.push({ date: today, language });
+                    await userRanking.save();
+                    client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
+                }
+            }
+
         }
 
         // Verifica se a mensagem é para exibir ranking
         if (normalizedMessage === '!ranking') {
             const today = new Date();
-            const lastWeek = new Date();
-            const lastMonth = new Date();
-            const lastYear = new Date();
+            const startOfWeek = new Date();
+            const startOfMonth = new Date();
+            const startOfYear = new Date();
 
-            lastWeek.setDate(today.getDate() - 7);
-            lastMonth.setMonth(today.getMonth() - 1);
-            lastYear.setFullYear(today.getFullYear() - 1);
+            // Ajustar para o domingo mais próximo (início da semana)
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            startOfWeek.setHours(0, 0, 0, 0);
 
-            // Ranking Geral
-            const rankingGeral = await Ranking.find().sort({ totalCheckIns: -1 });
-            // Ranking Anual
-            const rankingAnual = await Ranking.find({ 
-                'checkIns.date': { $gte: lastYear }
-            }).sort({ totalCheckIns: -1 });
-            // Ranking Mensal
-            const rankingMensal = await Ranking.find({ 
-                'checkIns.date': { $gte: lastMonth }
-            }).sort({ totalCheckIns: -1 });
-            // Ranking Semanal
-            const rankingSemanal = await Ranking.find({ 
-                'checkIns.date': { $gte: lastWeek }
-            }).sort({ totalCheckIns: -1 });
+            startOfMonth.setDate(1);
+            startOfMonth.setHours(0, 0, 0, 0);
+
+            startOfYear.setMonth(0, 1); // Janeiro é mês 0, dia 1
+            startOfYear.setHours(0, 0, 0, 0);
+
+            // Função para contar check-ins únicos por dia
+            const countUniqueCheckIns = (checkIns) => {
+                const uniqueDates = new Set();
+                checkIns.forEach((checkIn) => {
+                    const date = new Date(checkIn.date);
+                    const dateKey = date.toISOString().split('T')[0]; // yyyy-mm-dd format
+                    uniqueDates.add(dateKey);
+                });
+                return uniqueDates.size;
+            };
+
+            // Ranking Geral (conta todos os check-ins únicos por dia)
+            const allRankings = await Ranking.find();
+            const rankingGeral = allRankings.map(user => ({
+                userName: user.userName,
+                totalCheckIns: countUniqueCheckIns(user.checkIns)
+            })).sort((a, b) => b.totalCheckIns - a.totalCheckIns);
+
+            // Ranking Anual (considera check-ins únicos por dia a partir do início do ano)
+            const rankingAnual = allRankings.map(user => {
+                const filteredCheckIns = user.checkIns.filter(checkIn => new Date(checkIn.date) >= startOfYear);
+                return {
+                    userName: user.userName,
+                    totalCheckIns: countUniqueCheckIns(filteredCheckIns)
+                };
+            }).sort((a, b) => b.totalCheckIns - a.totalCheckIns);
+
+            // Ranking Mensal (considera check-ins únicos por dia a partir do início do mês)
+            const rankingMensal = allRankings.map(user => {
+                const filteredCheckIns = user.checkIns.filter(checkIn => new Date(checkIn.date) >= startOfMonth);
+                return {
+                    userName: user.userName,
+                    totalCheckIns: countUniqueCheckIns(filteredCheckIns)
+                };
+            }).sort((a, b) => b.totalCheckIns - a.totalCheckIns);
+
+            // Ranking Semanal (considera check-ins únicos por dia a partir do início da semana)
+            const rankingSemanal = allRankings.map(user => {
+                const filteredCheckIns = user.checkIns.filter(checkIn => new Date(checkIn.date) >= startOfWeek);
+                return {
+                    userName: user.userName,
+                    totalCheckIns: countUniqueCheckIns(filteredCheckIns)
+                };
+            }).sort((a, b) => b.totalCheckIns - a.totalCheckIns);
 
             let rankingMessage = '*Ranking*\n\n';
 
@@ -164,6 +208,7 @@ client.on('message', async message => {
 
             client.sendMessage(message.from, rankingMessage);
         }
+
     }
 });
 
