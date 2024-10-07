@@ -64,12 +64,12 @@ client.on('message', async message => {
     const normalizedMessage = normalizeText(message.body);
 
     // Lista de idiomas aceitos
-    const acceptedLanguages = ['ingles', 'frances', 'italiano', 'espanhol', 'japones'];
+    const acceptedLanguages = ['ingles', 'frances', 'italiano', 'espanhol', 'japones', 'russo'];
 
     if (message.from.includes('@g.us')) {
 
         if (normalizedMessage.startsWith('id do grupo')) {
-            console.log(`ID do Grupo: ${message.from}`);
+            client.sendMessage(message.from, `ID do Grupo: ${message.from}`);
         }
 
         if (!allowedGroups.includes(message.from)) // Apenas grupos permitidos podem usar o BOT
@@ -85,7 +85,8 @@ client.on('message', async message => {
 
             // Verifica se o idioma é válido
             if (!acceptedLanguages.includes(language)) {
-                client.sendMessage(message.from, `O idioma "${language}" não é aceito. Por favor, use um dos seguintes: ingles, frances, italiano, espanhol, japones.`);
+                client.sendMessage(message.from, `O idioma "${language}" não é aceito. Por favor, use um dos seguintes: ${acceptedLanguages.join(', ')}.`);
+                return
             }
             
             const today = new Date(); // Mantém a data e a hora atual
