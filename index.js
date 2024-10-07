@@ -15,11 +15,6 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('Conectado ao MongoDB!'))
     .catch(err => console.error('Erro ao conectar ao MongoDB:', err));
 
-// // Cria um novo cliente do WhatsApp
-// const client = new Client({
-//     authStrategy: new LocalAuth()
-// });
-
 // Creating a new instance of the client
 const client = new Client({
     puppeteer: {
