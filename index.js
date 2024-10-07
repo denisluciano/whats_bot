@@ -151,8 +151,8 @@ client.on('message', async message => {
                 return uniqueDates.size;
             };
 
-            // Ranking Geral (conta todos os check-ins únicos por dia)
             const allRankings = await Ranking.find();
+            // Ranking Geral (conta todos os check-ins únicos por dia)
             const rankingGeral = allRankings.map(user => ({
                 userName: user.userName,
                 totalCheckIns: countUniqueCheckIns(user.checkIns)
@@ -207,6 +207,96 @@ client.on('message', async message => {
                 rankingMessage += `${index + 1}. ${user.userName} - ${user.totalCheckIns} check-ins\n`;
             });
 
+            client.sendMessage(message.from, rankingMessage);
+        }
+
+        if (normalizedMessage === '!meuranking') {
+            const userId = message.author || message.from;
+            const today = new Date();
+            const startOfWeek = new Date();
+            const startOfMonth = new Date();
+            const startOfYear = new Date();
+    
+            // Ajustar para o domingo mais próximo (início da semana)
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            startOfWeek.setHours(0, 0, 0, 0);
+    
+            startOfMonth.setDate(1);
+            startOfMonth.setHours(0, 0, 0, 0);
+    
+            startOfYear.setMonth(0, 1); // Janeiro é mês 0, dia 1
+            startOfYear.setHours(0, 0, 0, 0);
+    
+            // Função para contar check-ins únicos por dia e por idioma
+            const countCheckInsByLanguage = (checkIns) => {
+                const languageCounts = {};
+                checkIns.forEach((checkIn) => {
+                    const dateKey = new Date(checkIn.date).toISOString().split('T')[0];
+                    const language = checkIn.language;
+    
+                    // Se ainda não houver contagem para esse idioma e data, inicializa
+                    if (!languageCounts[language]) {
+                        languageCounts[language] = new Set();
+                    }
+    
+                    languageCounts[language].add(dateKey);
+                });
+    
+                // Converte o set de datas únicas para o número de check-ins por idioma
+                const result = {};
+                for (const language in languageCounts) {
+                    result[language] = languageCounts[language].size;
+                }
+                return result;
+            };
+    
+            // Encontra o ranking do usuário
+            let userRanking = await Ranking.findOne({ userId });
+            if (!userRanking) {
+                client.sendMessage(message.from, 'Você ainda não fez nenhum check-in!');
+                return;
+            }
+    
+            // Check-ins filtrados por período
+            const allCheckIns = userRanking.checkIns;
+            const annualCheckIns = allCheckIns.filter(checkIn => new Date(checkIn.date) >= startOfYear);
+            const monthlyCheckIns = allCheckIns.filter(checkIn => new Date(checkIn.date) >= startOfMonth);
+            const weeklyCheckIns = allCheckIns.filter(checkIn => new Date(checkIn.date) >= startOfWeek);
+    
+            // Conta check-ins por idioma e por período
+            const generalCounts = countCheckInsByLanguage(allCheckIns);
+            const annualCounts = countCheckInsByLanguage(annualCheckIns);
+            const monthlyCounts = countCheckInsByLanguage(monthlyCheckIns);
+            const weeklyCounts = countCheckInsByLanguage(weeklyCheckIns);
+    
+            // Monta a mensagem de ranking pessoal
+            let rankingMessage = '*Meu Ranking*\n\n';
+    
+            // Adiciona o ranking geral
+            rankingMessage += '*Geral:*\n';
+            for (const language of Object.keys(generalCounts)) {
+                rankingMessage += `${language.charAt(0).toUpperCase() + language.slice(1)} - ${generalCounts[language]} check-ins\n`;
+            }
+    
+            // Adiciona o ranking anual
+            rankingMessage += '\n*Anual:*\n';
+            for (const language of Object.keys(annualCounts)) {
+                rankingMessage += `${language.charAt(0).toUpperCase() + language.slice(1)} - ${annualCounts[language]} check-ins\n`;
+            }
+    
+            // Adiciona o ranking mensal
+            rankingMessage += '\n*Mensal:*\n';
+            for (const language of Object.keys(monthlyCounts)) {
+                rankingMessage += `${language.charAt(0).toUpperCase() + language.slice(1)} - ${monthlyCounts[language]} check-ins\n`;
+            }
+    
+            // Adiciona o ranking semanal
+            rankingMessage += '\n*Semanal:*\n';
+            for (const language of Object.keys(weeklyCounts)) {
+                rankingMessage += `${language.charAt(0).toUpperCase() + language.slice(1)} - ${weeklyCounts[language]} check-ins\n`;
+            }
+    
+            // Envia a mensagem com o ranking pessoal
             client.sendMessage(message.from, rankingMessage);
         }
 
