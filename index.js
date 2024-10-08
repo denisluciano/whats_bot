@@ -103,11 +103,17 @@ client.on('message', async message => {
                 // Verifica se já fez o check-in hoje para o idioma informado
                 const alreadyCheckedInToday = userRanking.checkIns.some(checkIn => {
                     const checkInDate = new Date(checkIn.date);
+                    
+                    // Isso aqui é pra não ter inconsistência de fuso horário.
+                    // Se não for assim, entre 21-23:59 é possível já fazer check-in
+                    const today_brt = new Date(today.getTime() - 3 * 60 * 60 * 1000);
+                    const checkInDate_brt = new Date(checkInDate.getTime() - 3 * 60 * 60 * 1000);
+
                     return (
-                        checkInDate.getFullYear() === today.getFullYear() &&
-                        checkInDate.getMonth() === today.getMonth() &&
-                        checkInDate.getDate() === today.getDate() &&
-                        checkIn.language === language
+                        checkInDate_brt.getUTCFullYear() == today_brt.getUTCFullYear() &&
+                        checkInDate_brt.getUTCMonth() == today_brt.getUTCMonth() &&
+                        checkInDate_brt.getUTCDate() == today_brt.getUTCDate() &&
+                        checkIn.language == language
                     );
                 });
 
