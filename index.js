@@ -2,11 +2,12 @@ const qrcode = require("qrcode");
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const mongoose = require('mongoose');
 const Ranking = require('./ranking'); // Certifique-se de que o caminho está correto
+const { DateToBrt, getTodayBrt } = require('./utils');
 require('dotenv').config(); // Carrega as variáveis do .env
 
 // Lista de IDs de grupos permitidos
 const allowedGroups = [
-    '120363345949387736@g.us', // Grupo do ta pago linguas
+    // '120363345949387736@g.us', // Grupo do ta pago linguas
     '120363326956975856@g.us' // Grupo de teste
 ];
 
@@ -29,7 +30,13 @@ const client = new Client({
         "--disable-setuid-sandbox",
       ],
     },
-    authStrategy: new LocalAuth(), // Adiciona essa linha para salvar o estado da sessão
+    
+    // Isso salva a seção e não precisa sempre autenticar. Mas o problema, que se por acaso eu tiver rodando ele em PRD
+    // e em algum momento for rodar local, ele vai pegar todas as mensagens que foram geradas em PRD e computa-las aqui.
+    // o que vai gerar vários check-ins errados.
+    // ------> NÃO USAR ESSA CONFIG
+    // authStrategy: new LocalAuth(), 
+
     // Setting the webVersionCache option
     webVersionCache: {
       // Setting the type as "remote", which means that the WhatsApp Web version will be fetched from a remote URL
@@ -89,7 +96,7 @@ client.on('message', async message => {
                 return
             }
             
-            const today = new Date(); // Mantém a data e a hora atual
+            const today = new Date();
 
             // Encontra o ranking do usuário
             let userRanking = await Ranking.findOne({ userId });
@@ -106,8 +113,8 @@ client.on('message', async message => {
                     
                     // Isso aqui é pra não ter inconsistência de fuso horário.
                     // Se não for assim, entre 21-23:59 é possível já fazer check-in
-                    const today_brt = new Date(today.getTime() - 3 * 60 * 60 * 1000);
-                    const checkInDate_brt = new Date(checkInDate.getTime() - 3 * 60 * 60 * 1000);
+                    const today_brt = getTodayBrt();
+                    const checkInDate_brt = DateToBrt(checkInDate);
 
                     return (
                         checkInDate_brt.getUTCFullYear() == today_brt.getUTCFullYear() &&
@@ -131,13 +138,14 @@ client.on('message', async message => {
 
         // Verifica se a mensagem é para exibir ranking
         if (normalizedMessage === '!ranking') {
-            const today = new Date();
-            const startOfWeek = new Date();
-            const startOfMonth = new Date();
-            const startOfYear = new Date();
+            const today = getTodayBrt();
+            
+            const startOfWeek = getTodayBrt();
+            const startOfMonth = getTodayBrt();
+            const startOfYear = getTodayBrt();
 
             // Ajustar para o domingo mais próximo (início da semana)
-            startOfWeek.setDate(today.getDate() - today.getDay());
+            startOfWeek.setDate(today.getUTCDate() - today.getUTCDay());
             startOfWeek.setHours(0, 0, 0, 0);
 
             startOfMonth.setDate(1);
@@ -151,7 +159,8 @@ client.on('message', async message => {
                 const uniqueDates = new Set();
                 checkIns.forEach((checkIn) => {
                     const date = new Date(checkIn.date);
-                    const dateKey = date.toISOString().split('T')[0]; // yyyy-mm-dd format
+                    const dateBrt = DateToBrt(date)
+                    const dateKey = dateBrt.toISOString().split('T')[0]; // yyyy-mm-dd format
                     uniqueDates.add(dateKey);
                 });
                 return uniqueDates.size;
@@ -166,7 +175,7 @@ client.on('message', async message => {
 
             // Ranking Anual (considera check-ins únicos por dia a partir do início do ano)
             const rankingAnual = allRankings.map(user => {
-                const filteredCheckIns = user.checkIns.filter(checkIn => new Date(checkIn.date) >= startOfYear);
+                const filteredCheckIns = user.checkIns.filter(checkIn => DateToBrt(new Date(checkIn.date)) >= startOfYear);
                 return {
                     userName: user.userName,
                     totalCheckIns: countUniqueCheckIns(filteredCheckIns)
@@ -175,7 +184,7 @@ client.on('message', async message => {
 
             // Ranking Mensal (considera check-ins únicos por dia a partir do início do mês)
             const rankingMensal = allRankings.map(user => {
-                const filteredCheckIns = user.checkIns.filter(checkIn => new Date(checkIn.date) >= startOfMonth);
+                const filteredCheckIns = user.checkIns.filter(checkIn => DateToBrt(new Date(checkIn.date)) >= startOfMonth);
                 return {
                     userName: user.userName,
                     totalCheckIns: countUniqueCheckIns(filteredCheckIns)
@@ -184,7 +193,7 @@ client.on('message', async message => {
 
             // Ranking Semanal (considera check-ins únicos por dia a partir do início da semana)
             const rankingSemanal = allRankings.map(user => {
-                const filteredCheckIns = user.checkIns.filter(checkIn => new Date(checkIn.date) >= startOfWeek);
+                const filteredCheckIns = user.checkIns.filter(checkIn => DateToBrt(new Date(checkIn.date)) >= startOfWeek);
                 return {
                     userName: user.userName,
                     totalCheckIns: countUniqueCheckIns(filteredCheckIns)
