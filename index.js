@@ -30,11 +30,12 @@ const client = new Client({
         "--disable-setuid-sandbox",
       ],
     },
-    
+
     // Isso salva a seção e não precisa sempre autenticar. Mas o problema, que se por acaso eu tiver rodando ele em PRD
     // e em algum momento for rodar local, ele vai pegar todas as mensagens que foram geradas em PRD e computa-las aqui.
     // o que vai gerar vários check-ins errados.
-    // ------> NÃO USAR ESSA CONFIG
+    // ------> APENAS USAR EM DESENVOLVIMENTO.
+    // ------> SEMPRE QUE FOR USAR, DELETAR A PASTA ".wwebjs_auth" ANTES DE RODAR
     // authStrategy: new LocalAuth(), 
 
     // Setting the webVersionCache option
@@ -227,13 +228,15 @@ client.on('message', async message => {
 
         if (normalizedMessage === '!meuranking') {
             const userId = message.author || message.from;
-            const today = new Date();
-            const startOfWeek = new Date();
-            const startOfMonth = new Date();
-            const startOfYear = new Date();
+
+            const today = getTodayBrt();
+            
+            const startOfWeek = getTodayBrt();
+            const startOfMonth = getTodayBrt();
+            const startOfYear = getTodayBrt();
     
             // Ajustar para o domingo mais próximo (início da semana)
-            startOfWeek.setDate(today.getDate() - today.getDay());
+            startOfWeek.setDate(today.getUTCDate() - today.getUTCDay());
             startOfWeek.setHours(0, 0, 0, 0);
     
             startOfMonth.setDate(1);
@@ -246,7 +249,11 @@ client.on('message', async message => {
             const countCheckInsByLanguage = (checkIns) => {
                 const languageCounts = {};
                 checkIns.forEach((checkIn) => {
-                    const dateKey = new Date(checkIn.date).toISOString().split('T')[0];
+
+                    const date = new Date(checkIn.date);
+                    const dateBrt = DateToBrt(date)
+                    const dateKey = dateBrt.toISOString().split('T')[0]; // yyyy-mm-dd format
+
                     const language = checkIn.language;
     
                     // Se ainda não houver contagem para esse idioma e data, inicializa
@@ -274,9 +281,9 @@ client.on('message', async message => {
     
             // Check-ins filtrados por período
             const allCheckIns = userRanking.checkIns;
-            const annualCheckIns = allCheckIns.filter(checkIn => new Date(checkIn.date) >= startOfYear);
-            const monthlyCheckIns = allCheckIns.filter(checkIn => new Date(checkIn.date) >= startOfMonth);
-            const weeklyCheckIns = allCheckIns.filter(checkIn => new Date(checkIn.date) >= startOfWeek);
+            const annualCheckIns = allCheckIns.filter(checkIn => DateToBrt(new Date(checkIn.date)) >= startOfYear);
+            const monthlyCheckIns = allCheckIns.filter(checkIn => DateToBrt(new Date(checkIn.date)) >= startOfMonth);
+            const weeklyCheckIns = allCheckIns.filter(checkIn => DateToBrt(new Date(checkIn.date)) >= startOfWeek);
     
             // Conta check-ins por idioma e por período
             const generalCounts = countCheckInsByLanguage(allCheckIns);
