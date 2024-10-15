@@ -31,11 +31,13 @@ const client = new Client({
       ],
     },
 
-    // Isso salva a seção e não precisa sempre autenticar. Mas o problema, que se por acaso eu tiver rodando ele em PRD
-    // e em algum momento for rodar local, ele vai pegar todas as mensagens que foram geradas em PRD e computa-las aqui.
-    // o que vai gerar vários check-ins errados.
-    // ------> APENAS USAR EM DESENVOLVIMENTO.
-    // ------> SEMPRE QUE FOR USAR, DELETAR A PASTA ".wwebjs_auth" ANTES DE RODAR
+    // Este código salva a sessão, evitando a necessidade de autenticar novamente a cada execução.
+    // No entanto, isso pode causar problemas quando executado em ambientes diferentes, como Local e PRD (Produção).
+    // Por exemplo, se a sessão local estiver desconectada, mas a sessão em PRD estiver ativa e processando dados,
+    // ao reativar a sessão local, o sistema tentará computar todas as mensagens acumuladas desde a última vez que a sessão local foi desligada.
+    // Isso pode gerar inconsistências nos dados, pois as mesmas mensagens podem ser processadas duas vezes ou em ordens diferentes.
+    // ------> SE ESSA LINHA ABAIXO ESTIVER DESCOMENTADA, IMPORTANTE:
+    // ------> SEMPRE QUE FOR ALTERNAR A EXECUÇÃO EM OUTRO AMBIENTE, DELETAR A PASTA ".wwebjs_auth" ANTES DE RODAR
     // authStrategy: new LocalAuth(), 
 
     // Setting the webVersionCache option
