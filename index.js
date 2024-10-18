@@ -69,16 +69,25 @@ const normalizeText = (text) => {
     return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 }
 
+const formatDateToBrazilian = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Os meses em JavaScript são baseados em 0 (Janeiro é 0)
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
 // Função para processar o check-in
 const processCheckIn = async (client, message, userId, userName, language, date) => {
     // Encontra o ranking do usuário
     let userRanking = await Ranking.findOne({ userId });
 
+    const date_brt_format = formatDateToBrazilian(DateToBrt(date));
+
     // Se o usuário não tiver um ranking, cria um novo
     if (!userRanking) {
         userRanking = new Ranking({ userId, userName, checkIns: [{ date, language }] });
         await userRanking.save();
-        client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
+        client.sendMessage(message.from, `🥳 *Parabéns* ${userName}! Check-in registrado para o idioma de *${language}* na data de *${date_brt_format}*!`);
     } else {
         // Verifica se já fez o check-in na data informada para o idioma informado
         const alreadyCheckedIn = userRanking.checkIns.some(checkIn => {
@@ -97,12 +106,12 @@ const processCheckIn = async (client, message, userId, userName, language, date)
         });
 
         if (alreadyCheckedIn) {
-            client.sendMessage(message.from, `${userName}, você já fez seu check-in para o idioma ${language} na data selecionada.`);
+            client.sendMessage(message.from, `⚠️ ${userName}, você *já fez* seu check-in para o idioma de *${language}* na data de *${date_brt_format}*.`);
         } else {
             // Atualiza o ranking com o novo check-in
             userRanking.checkIns.push({ date, language });
             await userRanking.save();
-            client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
+            client.sendMessage(message.from, `🥳 *Parabéns* ${userName}! Check-in registrado para o idioma de *${language}* na data de *${date_brt_format}*!`);
         }
     }
 }
