@@ -221,7 +221,7 @@ client.on('message', async message => {
             client.sendMessage(message.from, rankingMessage);
         }
 
-        if (normalizedMessage === '!meuscheckins') {
+        if (normalizedMessage === '!meustapagos') {
             const userId = message.author || message.from;
 
             const today = getTodayBrt();
