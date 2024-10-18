@@ -65,12 +65,50 @@ client.on('ready', () => {
     console.log('Client is ready!');
 });
 
-client.on('message', async message => {
-    // Função para normalizar o texto (remover acentos e deixar minúsculas)
-    const normalizeText = (text) => {
-        return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-    }
+const normalizeText = (text) => {
+    return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+}
 
+// Função para processar o check-in
+const processCheckIn = async (client, message, userId, userName, language, date) => {
+    // Encontra o ranking do usuário
+    let userRanking = await Ranking.findOne({ userId });
+
+    // Se o usuário não tiver um ranking, cria um novo
+    if (!userRanking) {
+        userRanking = new Ranking({ userId, userName, checkIns: [{ date, language }] });
+        await userRanking.save();
+        client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
+    } else {
+        // Verifica se já fez o check-in na data informada para o idioma informado
+        const alreadyCheckedIn = userRanking.checkIns.some(checkIn => {
+            const checkInDate = new Date(checkIn.date);
+
+            // Evita duplicação de check-ins
+            const date_brt = DateToBrt(checkInDate);
+            const targetDate_brt = DateToBrt(date);
+
+            return (
+                date_brt.getUTCFullYear() == targetDate_brt.getUTCFullYear() &&
+                date_brt.getUTCMonth() == targetDate_brt.getUTCMonth() &&
+                date_brt.getUTCDate() == targetDate_brt.getUTCDate() &&
+                checkIn.language == language
+            );
+        });
+
+        if (alreadyCheckedIn) {
+            client.sendMessage(message.from, `${userName}, você já fez seu check-in para o idioma ${language} na data selecionada.`);
+        } else {
+            // Atualiza o ranking com o novo check-in
+            userRanking.checkIns.push({ date, language });
+            await userRanking.save();
+            client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
+        }
+    }
+}
+
+client.on('message', async message => {
+    
     const normalizedMessage = normalizeText(message.body);
 
     // Lista de idiomas aceitos
@@ -89,54 +127,37 @@ client.on('message', async message => {
         if (normalizedMessage.startsWith('ta pago')) {
             const userId = message.author || message.from;
             const userName = message._data.notifyName;
-
+            
+            const splitMessage = normalizedMessage.split(' '); // Divide a mensagem em partes
+            
+            // Verifica se o formato da mensagem está correto (3 ou 4 partes)
+            if (splitMessage.length !== 3 && splitMessage.length !== 4) {
+                return;
+            }
+        
             // Obtém o idioma informado (ex.: ingles, frances)
-            const language = normalizedMessage.split(' ')[2];
-
+            const language = splitMessage[2];
+            const timeFrame = splitMessage[3]; // Verifica se há um 'ontem' como quarto argumento
+        
             // Verifica se o idioma é válido
             if (!acceptedLanguages.includes(language)) {
                 client.sendMessage(message.from, `O idioma "${language}" não é aceito. Por favor, use um dos seguintes: ${acceptedLanguages.join(', ')}.`);
-                return
+                return;
             }
-            
-            const today = new Date();
-
-            // Encontra o ranking do usuário
-            let userRanking = await Ranking.findOne({ userId });
-
-            // Se o usuário não tiver um ranking, cria um novo
-            if (!userRanking) {
-                userRanking = new Ranking({ userId, userName, checkIns: [{ date: today, language }] });
-                await userRanking.save();
-                client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
-            } else {
-                // Verifica se já fez o check-in hoje para o idioma informado
-                const alreadyCheckedInToday = userRanking.checkIns.some(checkIn => {
-                    const checkInDate = new Date(checkIn.date);
-                    
-                    // Isso aqui é pra não ter inconsistência de fuso horário.
-                    // Se não for assim, entre 21-23:59 é possível já fazer check-in
-                    const today_brt = getTodayBrt();
-                    const checkInDate_brt = DateToBrt(checkInDate);
-
-                    return (
-                        checkInDate_brt.getUTCFullYear() == today_brt.getUTCFullYear() &&
-                        checkInDate_brt.getUTCMonth() == today_brt.getUTCMonth() &&
-                        checkInDate_brt.getUTCDate() == today_brt.getUTCDate() &&
-                        checkIn.language == language
-                    );
-                });
-
-                if (alreadyCheckedInToday) {
-                    client.sendMessage(message.from, `${userName}, você já fez seu check-in hoje para o idioma ${language}.`);
-                } else {
-                    // Atualiza o ranking com o novo check-in, incluindo data e hora
-                    userRanking.checkIns.push({ date: today, language });
-                    await userRanking.save();
-                    client.sendMessage(message.from, `Parabéns ${userName}, você fez o seu check-in para o idioma ${language}!`);
-                }
+        
+            // Verifica se o timeFrame é 'ontem' ou se está ausente (caso do check-in de hoje)
+            if (splitMessage.length === 4 && timeFrame !== 'ontem') {
+                return;
             }
-
+        
+            // Define a data do check-in (hoje ou ontem)
+            let checkInDate = new Date();
+            if (timeFrame === 'ontem') {
+                checkInDate.setDate(checkInDate.getDate() - 1); // Ajusta a data para ontem
+            }
+        
+            // Chama a função para processar o check-in
+            await processCheckIn(client, message, userId, userName, language, checkInDate);
         }
 
         // Verifica se a mensagem é para exibir ranking
@@ -265,25 +286,21 @@ client.on('message', async message => {
                 rankingMessage += `${language.charAt(0).toUpperCase() + language.slice(1)} - ${generalCounts[language]} check-ins\n`;
             }
     
-            // Adiciona o ranking anual
             rankingMessage += '\n*Anual:*\n';
             for (const language of Object.keys(annualCounts)) {
                 rankingMessage += `${language.charAt(0).toUpperCase() + language.slice(1)} - ${annualCounts[language]} check-ins\n`;
             }
     
-            // Adiciona o ranking mensal
             rankingMessage += '\n*Mensal:*\n';
             for (const language of Object.keys(monthlyCounts)) {
                 rankingMessage += `${language.charAt(0).toUpperCase() + language.slice(1)} - ${monthlyCounts[language]} check-ins\n`;
             }
-    
-            // Adiciona o ranking semanal
+
             rankingMessage += '\n*Semanal:*\n';
             for (const language of Object.keys(weeklyCounts)) {
                 rankingMessage += `${language.charAt(0).toUpperCase() + language.slice(1)} - ${weeklyCounts[language]} check-ins\n`;
             }
-    
-            // Envia a mensagem com o ranking pessoal
+
             client.sendMessage(message.from, rankingMessage);
         }
 
