@@ -7,7 +7,7 @@ require('dotenv').config(); // Carrega as variáveis do .env
 
 // Lista de IDs de grupos permitidos
 const allowedGroups = [
-    //'120363345949387736@g.us', // Grupo do ta pago linguas
+    '120363345949387736@g.us', // Grupo do ta pago linguas
     '120363326956975856@g.us' // Grupo de teste
 ];
 
