@@ -174,8 +174,18 @@ client.on('message', async message => {
 
             let rankingMessage = '*Ranking desafio 2024*\n\n';
 
+            // Verifica se o ranking atual tem a mesma quantidade de check-ins do anterior para repetir o número
+            let currentPosition = 1;
+            let lastCheckIns = null;
+
             rankingAnual.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - *${user.totalCheckIns}* check-ins\n`;
+                if (user.totalCheckIns === lastCheckIns) {
+                    rankingMessage += `${currentPosition}. ${user.userName} - *${user.totalCheckIns}* check-ins\n`;
+                } else {
+                    currentPosition = index + 1;
+                    rankingMessage += `${currentPosition}. ${user.userName} - *${user.totalCheckIns}* check-ins\n`;
+                }
+                lastCheckIns = user.totalCheckIns;
             });
 
             client.sendMessage(message.from, rankingMessage);
@@ -247,7 +257,7 @@ client.on('message', async message => {
             const weeklyCounts = countCheckInsByLanguage(weeklyCheckIns);
     
             // Monta a mensagem de ranking pessoal
-            let rankingMessage = `*Meus check-ins - @${userRanking.userName}*\n\n`;
+            let rankingMessage = `*Meus check-ins @${userRanking.userName}*\n\n`;
     
             // Adiciona o ranking geral
             rankingMessage += '*Geral:*\n';
