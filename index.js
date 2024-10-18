@@ -7,7 +7,7 @@ require('dotenv').config(); // Carrega as variáveis do .env
 
 // Lista de IDs de grupos permitidos
 const allowedGroups = [
-    '120363345949387736@g.us', // Grupo do ta pago linguas
+    //'120363345949387736@g.us', // Grupo do ta pago linguas
     '120363326956975856@g.us' // Grupo de teste
 ];
 
@@ -38,7 +38,7 @@ const client = new Client({
     // Isso pode gerar inconsistências nos dados, pois as mesmas mensagens podem ser processadas duas vezes ou em ordens diferentes.
     // ------> SE ESSA LINHA ABAIXO ESTIVER DESCOMENTADA, IMPORTANTE:
     // ------> SEMPRE QUE FOR ALTERNAR A EXECUÇÃO EM OUTRO AMBIENTE, DELETAR A PASTA ".wwebjs_auth" ANTES DE RODAR
-    // authStrategy: new LocalAuth(), 
+    authStrategy: new LocalAuth(), 
 
     // Setting the webVersionCache option
     webVersionCache: {
@@ -143,16 +143,7 @@ client.on('message', async message => {
         if (normalizedMessage === '!ranking') {
             const today = getTodayBrt();
             
-            const startOfWeek = getTodayBrt();
-            const startOfMonth = getTodayBrt();
             const startOfYear = getTodayBrt();
-
-            // Ajustar para o domingo mais próximo (início da semana)
-            startOfWeek.setDate(today.getUTCDate() - today.getUTCDay());
-            startOfWeek.setHours(0, 0, 0, 0);
-
-            startOfMonth.setDate(1);
-            startOfMonth.setHours(0, 0, 0, 0);
 
             startOfYear.setMonth(0, 1); // Janeiro é mês 0, dia 1
             startOfYear.setHours(0, 0, 0, 0);
@@ -170,11 +161,6 @@ client.on('message', async message => {
             };
 
             const allRankings = await Ranking.find();
-            // Ranking Geral (conta todos os check-ins únicos por dia)
-            const rankingGeral = allRankings.map(user => ({
-                userName: user.userName,
-                totalCheckIns: countUniqueCheckIns(user.checkIns)
-            })).sort((a, b) => b.totalCheckIns - a.totalCheckIns);
 
             // Ranking Anual (considera check-ins únicos por dia a partir do início do ano)
             const rankingAnual = allRankings.map(user => {
@@ -185,50 +171,17 @@ client.on('message', async message => {
                 };
             }).sort((a, b) => b.totalCheckIns - a.totalCheckIns);
 
-            // Ranking Mensal (considera check-ins únicos por dia a partir do início do mês)
-            const rankingMensal = allRankings.map(user => {
-                const filteredCheckIns = user.checkIns.filter(checkIn => DateToBrt(new Date(checkIn.date)) >= startOfMonth);
-                return {
-                    userName: user.userName,
-                    totalCheckIns: countUniqueCheckIns(filteredCheckIns)
-                };
-            }).sort((a, b) => b.totalCheckIns - a.totalCheckIns);
 
-            // Ranking Semanal (considera check-ins únicos por dia a partir do início da semana)
-            const rankingSemanal = allRankings.map(user => {
-                const filteredCheckIns = user.checkIns.filter(checkIn => DateToBrt(new Date(checkIn.date)) >= startOfWeek);
-                return {
-                    userName: user.userName,
-                    totalCheckIns: countUniqueCheckIns(filteredCheckIns)
-                };
-            }).sort((a, b) => b.totalCheckIns - a.totalCheckIns);
+            let rankingMessage = '*Ranking desafio 2024*\n\n';
 
-            let rankingMessage = '*Ranking*\n\n';
-
-            rankingMessage += '*Geral:*\n';
-            rankingGeral.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalCheckIns} check-ins\n`;
-            });
-
-            rankingMessage += '\n*Anual:*\n';
             rankingAnual.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalCheckIns} check-ins\n`;
-            });
-
-            rankingMessage += '\n*Mensal:*\n';
-            rankingMensal.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalCheckIns} check-ins\n`;
-            });
-
-            rankingMessage += '\n*Semanal:*\n';
-            rankingSemanal.forEach((user, index) => {
-                rankingMessage += `${index + 1}. ${user.userName} - ${user.totalCheckIns} check-ins\n`;
+                rankingMessage += `${index + 1}. ${user.userName} - *${user.totalCheckIns}* check-ins\n`;
             });
 
             client.sendMessage(message.from, rankingMessage);
         }
 
-        if (normalizedMessage === '!meuranking') {
+        if (normalizedMessage === '!meuscheckins') {
             const userId = message.author || message.from;
 
             const today = getTodayBrt();
@@ -294,7 +247,7 @@ client.on('message', async message => {
             const weeklyCounts = countCheckInsByLanguage(weeklyCheckIns);
     
             // Monta a mensagem de ranking pessoal
-            let rankingMessage = '*Meu Ranking*\n\n';
+            let rankingMessage = `*Meus check-ins - ${userRanking.userName}*\n\n`;
     
             // Adiciona o ranking geral
             rankingMessage += '*Geral:*\n';
