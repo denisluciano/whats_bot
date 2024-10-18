@@ -247,7 +247,7 @@ client.on('message', async message => {
             const weeklyCounts = countCheckInsByLanguage(weeklyCheckIns);
     
             // Monta a mensagem de ranking pessoal
-            let rankingMessage = `*Meus check-ins - ${userRanking.userName}*\n\n`;
+            let rankingMessage = `*Meus check-ins - @${userRanking.userName}*\n\n`;
     
             // Adiciona o ranking geral
             rankingMessage += '*Geral:*\n';
