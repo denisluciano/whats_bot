@@ -21,3 +21,18 @@ Os usuários podem fazer check-ins enviando mensagens no formato `ta pago <idiom
 - Ranking por usuário dividido em períodos: geral, anual, mensal e semanal.
 - Suporte a múltiplos idiomas, com contagem de apenas um check-in por idioma por dia.
 
+
+project/
+├── controllers/
+│   ├── checkinController.js   // Lógica de check-ins (processa e salva no banco)
+│   ├── rankingController.js   // Lógica de rankings (exibe rankings gerais ou individuais)
+├── handlers/
+│   ├── messageHandler.js      // Lida com mensagens recebidas e decide o fluxo
+├── models/
+│   ├── Ranking.js             // Modelo Mongoose para check-ins e rankings
+├── utils/
+│   ├── dateUtils.js           // Funções para manipulação de datas
+│   ├── normalizeText.js       // Função para normalizar texto (remover acentos, etc.)
+├── index.js                     // Arquivo principal do aplicativo
+├── .env                       // Variáveis de ambiente (chaves do MongoDB, etc.)
+└── package.json               // Dependências e scripts do projeto
