@@ -1,6 +1,5 @@
-const { processCheckIn } = require('../controllers/checkinController');
+const { processCheckIn } = require('../controllers/checkinLanguagesController');
 const { getRankingMessage } = require('../controllers/rankingController');
-const groupContexts = require('../config/groupContexts');
 
 const handleMessage = async (client, message) => {
     const groupId = message.from;

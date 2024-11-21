@@ -2,46 +2,41 @@ const Ranking = require('../models/ranking');
 const { DateToBrt } = require('../utils/dateUtils');
 
 const processCheckIn = async (client, message, userId, userName, activity, context, date) => {
-    const dateBrtFormat = DateToBrt(date).toISOString().split('T')[0];
+    
+    // Encontra o ranking do usuário
     let userRanking = await Ranking.findOne({ userId });
 
+    const date_brt_format = formatDateToBrazilian(DateToBrt(date));
+
+    // Se o usuário não tiver um ranking, cria um novo
     if (!userRanking) {
-        userRanking = new Ranking({
-            userId,
-            userName,
-            checkIns: [{ date, category: context, activity }],
-        });
+        userRanking = new Ranking({ userId, userName, checkIns: [{ date, language }] });
         await userRanking.save();
-        client.sendMessage(
-            message.from,
-            `🥳 *Parabéns* ${userName}! Check-in registrado para *${activity}* no grupo de *${context}* na data de *${dateBrtFormat}*!`
-        );
+        client.sendMessage(message.from, `🥳 *Parabéns* ${userName}! Check-in registrado para o idioma de *${language}* na data de *${date_brt_format}*!`);
     } else {
+        // Verifica se já fez o check-in na data informada para o idioma informado
         const alreadyCheckedIn = userRanking.checkIns.some(checkIn => {
-            const checkInDate = DateToBrt(new Date(checkIn.date));
-            const targetDateBrt = DateToBrt(date);
+            const checkInDate = new Date(checkIn.date);
+
+            // Evita duplicação de check-ins
+            const date_brt = DateToBrt(checkInDate);
+            const targetDate_brt = DateToBrt(date);
 
             return (
-                checkInDate.getUTCFullYear() === targetDateBrt.getUTCFullYear() &&
-                checkInDate.getUTCMonth() === targetDateBrt.getUTCMonth() &&
-                checkInDate.getUTCDate() === targetDateBrt.getUTCDate() &&
-                checkIn.category === context &&
-                checkIn.activity === activity
+                date_brt.getUTCFullYear() == targetDate_brt.getUTCFullYear() &&
+                date_brt.getUTCMonth() == targetDate_brt.getUTCMonth() &&
+                date_brt.getUTCDate() == targetDate_brt.getUTCDate() &&
+                checkIn.language == language
             );
         });
 
         if (alreadyCheckedIn) {
-            client.sendMessage(
-                message.from,
-                `⚠️ ${userName}, você já fez seu check-in para *${activity}* no grupo de *${context}* na data de *${dateBrtFormat}*.`
-            );
+            client.sendMessage(message.from, `⚠️ ${userName}, você *já fez* seu check-in para o idioma de *${language}* na data de *${date_brt_format}*.`);
         } else {
-            userRanking.checkIns.push({ date, category: context, activity });
+            // Atualiza o ranking com o novo check-in
+            userRanking.checkIns.push({ date, language });
             await userRanking.save();
-            client.sendMessage(
-                message.from,
-                `🥳 *Parabéns* ${userName}! Check-in registrado para *${activity}* no grupo de *${context}* na data de *${dateBrtFormat}*!`
-            );
+            client.sendMessage(message.from, `🥳 *Parabéns* ${userName}! Check-in registrado para o idioma de *${language}* na data de *${date_brt_format}*!`);
         }
     }
 };

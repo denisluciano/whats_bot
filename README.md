@@ -33,6 +33,8 @@ project/
 ├── utils/
 │   ├── dateUtils.js           // Funções para manipulação de datas
 │   ├── normalizeText.js       // Função para normalizar texto (remover acentos, etc.)
+├── config/
+│   ├── groupContexts.js       // IDs dos grupos e seus contextos (línguas, academia)
 ├── index.js                     // Arquivo principal do aplicativo
 ├── .env                       // Variáveis de ambiente (chaves do MongoDB, etc.)
 └── package.json               // Dependências e scripts do projeto
