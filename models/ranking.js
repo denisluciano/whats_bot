@@ -1,14 +1,13 @@
 const mongoose = require('mongoose');
 
-const rankingSchema = new mongoose.Schema({
+const checkinSchema = new mongoose.Schema({
     userId: String,
     userName: String,
-    checkIns: [{
-        date: Date,
-        language: String
-    }]
+    activity: String,
+    category: String,
+    date: Date,
 });
 
-const Ranking = mongoose.model('Ranking', rankingSchema);
+const Checkin = mongoose.model('Checkin', checkinSchema);
 
-module.exports = Ranking;
+module.exports = Checkin;

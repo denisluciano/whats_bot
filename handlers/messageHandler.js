@@ -1,4 +1,4 @@
-const { processCheckIn } = require('../controllers/checkinLanguagesController');
+const { processCheckIn } = require('../controllers/checkinController');
 const { getRankingMessage } = require('../controllers/rankingController');
 
 const handleMessage = async (client, message) => {
