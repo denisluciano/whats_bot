@@ -19,10 +19,10 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
 
     // Verifica se o usuário já fez check-in na mesma atividade, categoria e data
     const alreadyCheckedIn = await Checkin.findOne({
-        userId,
-        activity,
-        category,
-        date: {
+        'userId': userId,
+        'activity': activity,
+        'category': category,
+        'date': {
             $gte: startOfDay, // Início do dia
             $lt: endOfDay,    // Fim do dia
         },
@@ -40,13 +40,13 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
 
     // Cria um novo check-in
     const newCheckIn = new Checkin({
-        userId,
-        activity,
-        category,
-        dateUTC,
+        'userId': userId,
+        'activity': activity,
+        'category': category,
+        'date': dateUTC,
     });
 
-    // await newCheckIn.save();
+    await newCheckIn.save();
 
     client.sendMessage(
         message.from,

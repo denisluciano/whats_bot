@@ -2,7 +2,7 @@ const { processCheckIn } = require('../controllers/checkinController');
 // const { getRankingMessage } = require('../controllers/rankingController');
 const groupContexts = require('../config/groupContexts');
 const { normalizeText } = require('../utils/textUtils');
-const { getUTCDate } = require('../utils/dateUtils');
+const { getTodayBrt, getStartOfDateBrt, subtractDayOfDate, getUTCNow} = require('../utils/dateUtils');
 
 const handleMessage = async (client, message) => {
     const groupId = message.from;
@@ -22,9 +22,16 @@ const handleMessage = async (client, message) => {
         const [_, __, activity, timeframe] = normalizedMessage.split(' ');
         const userId = message.author || message.from;
         const userName = message._data.notifyName;
-        const date = timeframe === 'ontem' ? new Date(getUTCDate() - 86400000) : getUTCDate();
+        
+        utcNow = getUTCNow()
 
-        await processCheckIn(client, message, userId, userName, activity, context, date);
+        yesterdayUtc = subtractDayOfDate(utcNow, 1)
+
+        const date = (timeframe === 'ontem') ? getStartOfDateBrt(yesterdayUtc) : getTodayBrt();
+
+        console.log(date)
+
+        //await processCheckIn(client, message, userId, userName, activity, context, date);
 
     } else if (normalizedMessage === '!ranking') {
         // const rankingMessage = await getRankingMessage(context);

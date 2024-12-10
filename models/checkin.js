@@ -5,6 +5,7 @@ const checkinSchema = new mongoose.Schema({
     activity: String,
     category: String,
     date: Date,
+    inOverdue: Boolean //se enviou com a flag de "ontem"
 });
 
 const Checkin = mongoose.model('Checkin', checkinSchema);

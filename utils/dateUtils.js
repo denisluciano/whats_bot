@@ -1,13 +1,47 @@
+
+HOUR_IN_MILLISECONDS = 60 * 60 * 1000
+
+function getUTCNow() {
+    return new Date();
+}
+
 function DateToBrt(date) {
 
-    return new Date(date.getTime() - 3 * 60 * 60 * 1000);
+    return new Date(date.getTime() - 3 * HOUR_IN_MILLISECONDS);
 }
 
 function getTodayBrt() {
 
     const today = new Date();
 
-    return new Date(today.getTime() - 3 * 60 * 60 * 1000);
+    return new Date(today.getTime() - 3 * HOUR_IN_MILLISECONDS);
+}
+
+function getStartOfDateBrt(date) {
+
+    dateBrt =  new Date(date.getTime() - 3 * HOUR_IN_MILLISECONDS);
+
+    // Cria uma data UTC com ano, mês e dia, garantindo 00:00:00.000
+    const startOfDateBrt = new Date(Date.UTC(
+        dateBrt.getUTCFullYear(),
+        dateBrt.getUTCMonth(),
+        dateBrt.getUTCDate()
+    ));
+
+    return startOfDateBrt;
+
+}
+
+function getStartOfDayBrt() {
+
+    const today = new Date();
+
+    todayBrt =  new Date(today.getTime() - 3 * HOUR_IN_MILLISECONDS);
+
+    const startOfDayBrt = new Date(todayBrt.getUTCFullYear(), todayBrt.getUTCMonth(), todayBrt.getUTCDate());
+
+    return startOfDayBrt;
+
 }
 
 function formatDateToBrazilian (date) {
@@ -17,10 +51,17 @@ function formatDateToBrazilian (date) {
     return `${day}/${month}/${year}`;
 };
 
-function getUTCDate () {
-    const now = new Date();
-    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-};
+function subtractDayOfDate(date, numDays) {
+    return new Date(date - numDays * 86400000)
+}
 
 // Exporta a função para ser usada em outros arquivos
-module.exports = { DateToBrt, getTodayBrt, formatDateToBrazilian, getUTCDate };
+module.exports = { 
+    DateToBrt, 
+    getTodayBrt, 
+    formatDateToBrazilian,
+    getStartOfDayBrt, 
+    getStartOfDateBrt, 
+    getUTCNow,
+    subtractDayOfDate
+};
