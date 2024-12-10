@@ -38,7 +38,12 @@ function getStartOfDayBrt() {
 
     todayBrt =  new Date(today.getTime() - 3 * HOUR_IN_MILLISECONDS);
 
-    const startOfDayBrt = new Date(todayBrt.getUTCFullYear(), todayBrt.getUTCMonth(), todayBrt.getUTCDate());
+    // Cria uma data UTC com ano, mês e dia, garantindo 00:00:00.000
+    const startOfDayBrt = new Date(Date.UTC(
+        todayBrt.getUTCFullYear(),
+        todayBrt.getUTCMonth(),
+        todayBrt.getUTCDate()
+    ));
 
     return startOfDayBrt;
 
