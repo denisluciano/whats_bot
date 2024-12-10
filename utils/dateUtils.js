@@ -17,5 +17,10 @@ function formatDateToBrazilian (date) {
     return `${day}/${month}/${year}`;
 };
 
+function getUTCDate () {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+};
+
 // Exporta a função para ser usada em outros arquivos
-module.exports = { DateToBrt, getTodayBrt, formatDateToBrazilian };
+module.exports = { DateToBrt, getTodayBrt, formatDateToBrazilian, getUTCDate };

@@ -2,8 +2,20 @@ const Checkin = require('../models/checkin');
 const { DateToBrt } = require('../utils/dateUtils');
 const { formatDateToBrazilian } = require('../utils/dateUtils');
 
-const processCheckIn = async (client, message, userId, userName, activity, category, date) => {
-    const date_brt_format = formatDateToBrazilian(DateToBrt(date));
+const processCheckIn = async (client, message, userId, userName, activity, category, dateUTC) => {
+    
+    const date_brt_format = formatDateToBrazilian(DateToBrt(dateUTC));
+
+    // Ajusta a data para o início e fim do dia no horário local
+    const startOfDay = new Date(dateUTC);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(dateUTC);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    console.log('Data :', dateUTC);
+    console.log('Início do dia:', startOfDay);
+    console.log('Fim do dia:', endOfDay);
 
     // Verifica se o usuário já fez check-in na mesma atividade, categoria e data
     const alreadyCheckedIn = await Checkin.findOne({
@@ -11,10 +23,12 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
         activity,
         category,
         date: {
-            $gte: new Date(date.setHours(0, 0, 0, 0)), // Início do dia
-            $lt: new Date(date.setHours(23, 59, 59, 999)), // Fim do dia
+            $gte: startOfDay, // Início do dia
+            $lt: endOfDay,    // Fim do dia
         },
     });
+
+    console.log('Check-in encontrado:', alreadyCheckedIn);
 
     if (alreadyCheckedIn) {
         client.sendMessage(
@@ -29,10 +43,10 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
         userId,
         activity,
         category,
-        date,
+        dateUTC,
     });
 
-    await newCheckIn.save();
+    // await newCheckIn.save();
 
     client.sendMessage(
         message.from,
