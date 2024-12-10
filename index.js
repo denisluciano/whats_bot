@@ -1,12 +1,10 @@
 const qrcode = require("qrcode");
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const mongoose = require('mongoose');
 const { handleMessage } = require('./handlers/messageHandler');
-require('dotenv').config(); // Carrega as variáveis do .env
+const connectToMongoDB = require('./config/mongoConnection'); 
 
-// Lista de IDs de grupos permitidos
-const ID_GRUPO_IDIOMAS = process.env.IDS_TA_PAGO_IDIOMA
-const ID_GRUPO_ACADEMIA = process.env.IDS_TA_PAGO_ACADEMIA
+// Inicialize a conexão com o MongoDB
+connectToMongoDB();
 
 // Creating a new instance of the client
 const client = new Client({
@@ -58,7 +56,7 @@ client.on('ready', () => {
 
 client.on('message', async message => {
     
-    await handleMessage(client, message); // Delega ao messageHandler
+  await handleMessage(client, message); // Delega ao messageHandler
 });
 
 client.initialize();
