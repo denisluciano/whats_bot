@@ -1,14 +1,13 @@
 const Checkin = require('../models/checkin');
-const { DateToBrt } = require('../utils/dateUtils');
-const { formatDateToBrazilian } = require('../utils/dateUtils');
+const { formatDateToBrazilian, getStartOfDateBrt } = require('../utils/dateUtils');
 
-const processCheckIn = async (client, message, userId, userName, activity, category, dateUTC) => {
+const processCheckIn = async (client, message, userId, userName, activity, category, dateBrt) => {
     
-    const date_brt_format = formatDateToBrazilian(DateToBrt(dateUTC));
+    const date_brt_format = formatDateToBrazilian(dateBrt);
 
     // Ajusta a data para o início e fim do dia no horário local
     const startOfDay = new Date(dateUTC);
-    startOfDay.setHours(0, 0, 0, 0);
+
 
     const endOfDay = new Date(dateUTC);
     endOfDay.setHours(23, 59, 59, 999);
