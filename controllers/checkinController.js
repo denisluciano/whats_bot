@@ -1,5 +1,6 @@
 const moment = require('moment-timezone');
 const Checkin = require('../models/checkin');
+const User = require('../models/user');
 
 const processCheckIn = async (client, message, userId, userName, activity, category, dateUTC, inOverdue) => {
     // Converte a data UTC para o horário do Brasil (BRT)
@@ -9,9 +10,26 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
     const startOfDay = dateBRT.clone().startOf('day').utc().toDate();
     const endOfDay = dateBRT.clone().endOf('day').utc().toDate();
 
-    console.log('Data em UTC:', dateUTC);
-    console.log('Início do dia em UTC:', startOfDay);
-    console.log('Fim do dia em UTC:', endOfDay);
+    // console.log('Data em UTC:', dateUTC);
+    // console.log('Início do dia em UTC:', startOfDay);
+    // console.log('Fim do dia em UTC:', endOfDay);
+
+    // Verifica se o usuário já existe
+    const userAlreadyExist = await User.findOne({
+        'userId': userId
+    });
+
+    if(!userAlreadyExist){
+        // Cria um novo usuário
+        const newUser = new User({
+            'userId': userId,
+            'userName': userName,
+            'notificationEnabled': true,
+            'creationTime': moment.utc()
+        });
+
+        await newUser.save();
+    }
 
     // Verifica se o usuário já fez check-in na mesma atividade, categoria e data
     const alreadyCheckedIn = await Checkin.findOne({
@@ -24,14 +42,14 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
         },
     });
 
-    console.log('Check-in encontrado:', alreadyCheckedIn);
+    // console.log('Check-in encontrado:', alreadyCheckedIn);
 
     formatedDateBRT = dateBRT.format('DD/MM/YYYY')
 
     if (alreadyCheckedIn) {
         client.sendMessage(
             message.from,
-            `⚠️ ${userName}, você *já fez* um check-in para *${activity}* na categoria *${category}* em *${formatedDateBRT}* no horário BRT.`
+            `⚠️ ${userName}, você *já fez* um check-in para *${activity}* na categoria *${category}* em *${formatedDateBRT}*.`
         );
         return;
     }
