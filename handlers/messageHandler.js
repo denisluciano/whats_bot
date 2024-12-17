@@ -28,14 +28,16 @@ const handleMessage = async (client, message) => {
 
         // Define a data com base no "ontem" ou "hoje"
         let date = utcNow;
+        let inOverdue = false;
         
         if (timeframe === 'ontem') {
             date = moment.tz('America/Sao_Paulo').subtract(1, 'day').startOf('day').utc();
+            inOverdue = true;
         }
 
         console.log(`Data do check-in em UTC: ${date.format()}`);
 
-        // await processCheckIn(client, message, userId, userName, activity, context, date.toDate());
+        await processCheckIn(client, message, userId, userName, activity, context, date, inOverdue);
     } else if (normalizedMessage === '!ranking') {
         // const rankingMessage = await getRankingMessage(context);
         client.sendMessage(message.from, 'Ranking ainda não implementado.');
