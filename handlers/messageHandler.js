@@ -1,5 +1,6 @@
 const moment = require('moment-timezone');
 const { processCheckIn } = require('../controllers/checkinController');
+const {} = require('../controllers/rankingController');
 const groupContexts = require('../config/groupContexts');
 const { normalizeText } = require('../utils/textUtils');
 
@@ -35,12 +36,11 @@ const handleMessage = async (client, message) => {
             inOverdue = true;
         }
 
-        console.log(`Data do check-in em UTC: ${date.format()}`);
-
+        // console.log(`Data do check-in em UTC: ${date.format()}`);
         await processCheckIn(client, message, userId, userName, activity, context, date, inOverdue);
+
     } else if (normalizedMessage === '!ranking') {
-        // const rankingMessage = await getRankingMessage(context);
-        client.sendMessage(message.from, 'Ranking ainda não implementado.');
+        await getRanking(context);
     }
 };
 

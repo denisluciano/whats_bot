@@ -2,7 +2,7 @@ const Checkin = require('../models/checkin');
 const User = require('../models/user');
 const { DateToBrt, getTodayBrt } = require('../utils/dateUtils');
 
-const getRankingMessage = async (context) => {
+const getRanking = async (context) => {
     const today = getTodayBrt();
     const startOfYear = getTodayBrt();
 
