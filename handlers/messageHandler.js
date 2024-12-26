@@ -6,7 +6,7 @@ const { normalizeText } = require('../utils/textUtils');
 
 const handleMessage = async (client, message) => {
     const groupId = message.from;
-    const context = groupContexts[groupId];
+    const activity = groupContexts[groupId];
 
     // Normaliza o texto da mensagem
     const normalizedMessage = normalizeText(message.body);
@@ -15,12 +15,12 @@ const handleMessage = async (client, message) => {
         client.sendMessage(message.from, `ID do Grupo: ${message.from}`);
     }
 
-    if (!context) {
+    if (!activity) {
         return; // grupo não está na lista permitida
     }
 
     if (normalizedMessage.startsWith('ta pago')) {
-        const [_, __, activity, timeframe] = normalizedMessage.split(' ');
+        const [_, __, category, timeframe] = normalizedMessage.split(' ');
         const userId = message.author || message.from;
         const userName = message._data.notifyName;
 
@@ -29,19 +29,19 @@ const handleMessage = async (client, message) => {
 
         // Define a data com base no "ontem" ou "hoje"
         let date = utcNow;
-        let inOverdue = false;
+        let isOverdue = false;
         
         if (timeframe === 'ontem') {
             date = moment.tz('America/Sao_Paulo').subtract(1, 'day').startOf('day').utc();
-            inOverdue = true;
+            isOverdue = true;
         }
 
         // console.log(`Data do check-in em UTC: ${date.format()}`);
-        await processCheckIn(client, message, userId, userName, activity, context, date, inOverdue);
+        await processCheckIn(client, message, userId, userName, activity, category, date, isOverdue);
 
     } else if (normalizedMessage === '!ranking') {
         
-        rankingMessage = await getRanking(context);
+        rankingMessage = await getRanking(activity);
 
         client.sendMessage(message.from, rankingMessage);
     }

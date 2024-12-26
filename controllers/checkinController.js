@@ -2,7 +2,7 @@ const moment = require('moment-timezone');
 const Checkin = require('../models/checkin');
 const User = require('../models/user');
 
-const processCheckIn = async (client, message, userId, userName, activity, category, dateUTC, inOverdue) => {
+const processCheckIn = async (client, message, userId, userName, activity, category, dateUTC, isOverdue) => {
     // Converte a data UTC para o horário do Brasil (BRT)
     const dateBRT = moment(dateUTC).tz('America/Sao_Paulo');
 
@@ -60,7 +60,7 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
         'activity': activity,
         'category': category,
         'date': dateUTC, // Armazena a data original em UTC
-        'inOverdue': inOverdue
+        'isOverdue': isOverdue
     });
 
     await newCheckIn.save();

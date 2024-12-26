@@ -2,13 +2,13 @@ const moment = require('moment-timezone');
 const Checkin = require('../models/checkin');
 const User = require('../models/user');
 
-const getRanking = async (context) => {
+const getRanking = async (activity) => {
     // Obtém o início do ano em horário BRT
     const startOfYear = moment().tz('America/Sao_Paulo').startOf('year');
 
     // Filtra check-ins diretamente no banco de dados
     const allCheckIns = await Checkin.find({
-        category: context,
+        activity: activity,
         date: { $gte: startOfYear.toDate() },
     });
 
@@ -66,7 +66,7 @@ const getRanking = async (context) => {
         lastCheckIns = user.totalCheckIns;
     });
 
-    return rankingMessage || '⚠️ Não há check-ins registrados nesta categoria.';
+    return rankingMessage || '⚠️ Não há check-ins registrados nesta atividade.';
 };
 
 module.exports = { getRanking };
