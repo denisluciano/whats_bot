@@ -3,23 +3,24 @@ const Checkin = require('../models/checkin');
 const User = require('../models/user');
 
 const getRanking = async (context) => {
-    // Obtém a data de hoje e o início do ano em horário BRT
-    const today = moment().tz('America/Sao_Paulo').startOf('day');
+    // Obtém o início do ano em horário BRT
     const startOfYear = moment().tz('America/Sao_Paulo').startOf('year');
 
-    // Função para contar check-ins únicos por atividade
+    // Filtra check-ins diretamente no banco de dados
+    const allCheckIns = await Checkin.find({
+        category: context,
+        date: { $gte: startOfYear.toDate() },
+    });
+
+    // Função para contar check-ins únicos por usuário (1 por dia)
     const countUniqueCheckIns = (checkIns) => {
-        const uniqueEntries = new Map();
+        const uniqueDays = new Set();
         checkIns.forEach((checkIn) => {
             const date = moment(checkIn.date).tz('America/Sao_Paulo').format('YYYY-MM-DD');
-            const key = `${checkIn.activity}-${date}`;
-            uniqueEntries.set(key, true);
+            uniqueDays.add(date); // Adiciona apenas a data ao conjunto
         });
-        return uniqueEntries.size;
+        return uniqueDays.size; // Retorna o número de dias únicos
     };
-
-    // Busca todos os check-ins da categoria específica
-    const allCheckIns = await Checkin.find({ category: context });
 
     // Agrupa check-ins por usuário
     const userCheckinCounts = allCheckIns.reduce((acc, checkIn) => {
@@ -35,12 +36,9 @@ const getRanking = async (context) => {
     const rankingAnual = Object.keys(userCheckinCounts)
         .map((userId) => {
             const userCheckIns = userCheckinCounts[userId];
-            const filteredCheckIns = userCheckIns.filter(
-                (checkIn) => moment(checkIn.date).tz('America/Sao_Paulo').isSameOrAfter(startOfYear)
-            );
             return {
                 userId,
-                totalCheckIns: countUniqueCheckIns(filteredCheckIns),
+                totalCheckIns: countUniqueCheckIns(userCheckIns), // Conta apenas dias únicos
             };
         })
         .sort((a, b) => b.totalCheckIns - a.totalCheckIns);
@@ -51,10 +49,10 @@ const getRanking = async (context) => {
         entry.userName = user ? user.userName : 'Usuário desconhecido';
     }
 
-    // Monta a mensagem de ranking
-    let rankingMessage = `*Ranking ${context}*
+    year = moment().year()
 
-`;
+    // Monta a mensagem de ranking
+    let rankingMessage = `*Ranking desafio ${year}*\n\n`;
     let currentPosition = 1;
     let lastCheckIns = null;
 

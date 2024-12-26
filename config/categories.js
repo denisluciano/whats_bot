@@ -1,6 +1,6 @@
 module.exports = {
     linguas: ['ingles', 'frances', 'italiano', 'espanhol', 'japones', 'russo'],
-    academia: ['musculacao', 'corrida'],
+    atividade_fisica: ['musculacao', 'corrida'],
     testes: ['teste1', 'teste2'],
     liquido: ['agua', 'suco']
 };
