@@ -1,21 +1,18 @@
+const moment = require('moment-timezone');
 const Checkin = require('../models/checkin');
 const User = require('../models/user');
-const { DateToBrt, getTodayBrt } = require('../utils/dateUtils');
 
 const getRanking = async (context) => {
-    const today = getTodayBrt();
-    const startOfYear = getTodayBrt();
-
-    startOfYear.setMonth(0, 1); // Janeiro é mês 0, dia 1
-    startOfYear.setHours(0, 0, 0, 0);
+    // Obtém a data de hoje e o início do ano em horário BRT
+    const today = moment().tz('America/Sao_Paulo').startOf('day');
+    const startOfYear = moment().tz('America/Sao_Paulo').startOf('year');
 
     // Função para contar check-ins únicos por atividade
     const countUniqueCheckIns = (checkIns) => {
         const uniqueEntries = new Map();
         checkIns.forEach((checkIn) => {
-            const date = DateToBrt(new Date(checkIn.date));
-            const dateKey = date.toISOString().split('T')[0]; // Formato yyyy-mm-dd
-            const key = `${checkIn.activity}-${dateKey}`;
+            const date = moment(checkIn.date).tz('America/Sao_Paulo').format('YYYY-MM-DD');
+            const key = `${checkIn.activity}-${date}`;
             uniqueEntries.set(key, true);
         });
         return uniqueEntries.size;
@@ -39,7 +36,7 @@ const getRanking = async (context) => {
         .map((userId) => {
             const userCheckIns = userCheckinCounts[userId];
             const filteredCheckIns = userCheckIns.filter(
-                (checkIn) => DateToBrt(new Date(checkIn.date)) >= startOfYear
+                (checkIn) => moment(checkIn.date).tz('America/Sao_Paulo').isSameOrAfter(startOfYear)
             );
             return {
                 userId,
@@ -55,7 +52,9 @@ const getRanking = async (context) => {
     }
 
     // Monta a mensagem de ranking
-    let rankingMessage = `*Ranking ${context}*\n\n`;
+    let rankingMessage = `*Ranking ${context}*
+
+`;
     let currentPosition = 1;
     let lastCheckIns = null;
 
@@ -72,4 +71,4 @@ const getRanking = async (context) => {
     return rankingMessage || '⚠️ Não há check-ins registrados nesta categoria.';
 };
 
-module.exports = { getRankingMessage };
+module.exports = { getRanking };
