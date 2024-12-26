@@ -1,6 +1,6 @@
 const moment = require('moment-timezone');
 const { processCheckIn } = require('../controllers/checkinController');
-const {} = require('../controllers/rankingController');
+const { getRanking } = require('../controllers/rankingController');
 const groupContexts = require('../config/groupContexts');
 const { normalizeText } = require('../utils/textUtils');
 
@@ -40,7 +40,10 @@ const handleMessage = async (client, message) => {
         await processCheckIn(client, message, userId, userName, activity, context, date, inOverdue);
 
     } else if (normalizedMessage === '!ranking') {
-        await getRanking(context);
+        
+        rankingMessage = await getRanking(context);
+
+        client.sendMessage(message.from, rankingMessage);
     }
 };
 
