@@ -1,9 +1,8 @@
 const moment = require('moment-timezone');
 const { processCheckIn } = require('../controllers/checkinController');
 const { getRanking } = require('../controllers/rankingController');
-const groupContexts = require('../config/groupContexts');
-const activitiesSettings = require('../config/activitiesSettings');
 const { normalizeText } = require('../utils/textUtils');
+const Challenge = require('../models/challenge');
 
 
 const handleMessage = async (client, message) => {
@@ -16,13 +15,24 @@ const handleMessage = async (client, message) => {
     }
 
     const groupId = message.from;
-    const activityId = groupContexts[groupId];
 
-    if (!activityId) {
-        return; // grupo não está na lista permitida
+    // Pega a data UTC atual
+    let utcNow = moment.utc(); // Momento atual em UTC
+
+    // Encontrar o desafio 
+    const challenge = await Challenge.findOne({
+        'groupId': groupId,
+        'startDate': {
+            $lte: utcNow,    
+        },
+        'endDate': {
+            $gte: utcNow,    
+        },
+    });
+
+    if (!challenge) {
+        return; // grupo não possui um desafio ativo
     }
-
-    activitySettings = activitiesSettings[activityId]
 
     if (normalizedMessage.startsWith('ta pago')) {
         const [_, __, category, timeframe] = normalizedMessage.split(' ');
@@ -30,15 +40,12 @@ const handleMessage = async (client, message) => {
         const userName = message._data.notifyName;
 
         //verificando se é uma categoria válida
-        atividade = activitySettings["atividade"]
+        activity = challenge.activity
 
-        if(!activitySettings["categorias"].includes(category)) {
-            client.sendMessage(message.from, `A categoria *"${category}"* não é aceito para a atividade de *${atividade}*. Por favor, use uma das seguintes categorias: *${activitySettings["categorias"].join(', ')}*.`);
+        if(!challenge.categories.includes(category)) {
+            client.sendMessage(message.from, `A categoria *"${category}"* não é aceito para a atividade de *${activity}*. Por favor, use uma das seguintes categorias: *${challenge.categories.join(', ')}*.`);
             return
         }
-
-        // Pega a data UTC atual
-        let utcNow = moment.utc(); // Momento atual em UTC
 
         // Define a data com base no "ontem" ou "hoje"
         let date = utcNow;
@@ -49,14 +56,13 @@ const handleMessage = async (client, message) => {
             isOverdue = true;
         }
 
-        // console.log(`Data do check-in em UTC: ${date.format()}`);
-        await processCheckIn(client, message, userId, userName, activitySettings, activityId, category, date, isOverdue);
+        await processCheckIn(client, message, userId, userName, challenge, category, date, isOverdue);
 
     } else if (normalizedMessage === '!ranking') {
         
-        rankingMessage = await getRanking(activityId);
+        // rankingMessage = await getRanking(activityId);
 
-        client.sendMessage(message.from, rankingMessage);
+        // client.sendMessage(message.from, rankingMessage);
     }
 };
 
