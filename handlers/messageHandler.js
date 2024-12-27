@@ -60,9 +60,9 @@ const handleMessage = async (client, message) => {
 
     } else if (normalizedMessage === '!ranking') {
         
-        // rankingMessage = await getRanking(activityId);
+        rankingMessage = await getRanking(challenge);
 
-        // client.sendMessage(message.from, rankingMessage);
+        client.sendMessage(message.from, rankingMessage);
     }
 };
 

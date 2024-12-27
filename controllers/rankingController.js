@@ -2,14 +2,15 @@ const moment = require('moment-timezone');
 const Checkin = require('../models/checkin');
 const User = require('../models/user');
 
-const getRanking = async (activity) => {
-    // Obtém o início do ano em horário BRT
-    const startOfYear = moment().tz('America/Sao_Paulo').startOf('year');
+const getRanking = async (challenge) => {
 
     // Filtra check-ins diretamente no banco de dados
     const allCheckIns = await Checkin.find({
-        activity: activity,
-        date: { $gte: startOfYear.toDate() },
+        challengeId: challenge._id,
+        date: { 
+            $gte: challenge.startDate,
+            $lte: challenge.endDate 
+        },
     });
 
     // Função para contar check-ins únicos por usuário (1 por dia)
@@ -49,10 +50,9 @@ const getRanking = async (activity) => {
         entry.userName = user ? user.userName : 'Usuário desconhecido';
     }
 
-    year = moment().year()
 
     // Monta a mensagem de ranking
-    let rankingMessage = `*🏆 Ranking desafio ${year} 🏆*\n\n`;
+    let rankingMessage = `*🏆 Ranking do desafio de ${challenge.name} 🏆*\n\n`;
     let currentPosition = 1;
     let lastCheckIns = null;
 
