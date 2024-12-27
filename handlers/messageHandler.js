@@ -22,14 +22,14 @@ const handleMessage = async (client, message) => {
         return; // grupo não está na lista permitida
     }
 
+    activitySettings = activitiesSettings[activityId]
+
     if (normalizedMessage.startsWith('ta pago')) {
         const [_, __, category, timeframe] = normalizedMessage.split(' ');
         const userId = message.author || message.from;
         const userName = message._data.notifyName;
 
         //verificando se é uma categoria válida
-        activitySettings = activitiesSettings[activityId]
-
         atividade = activitySettings["atividade"]
 
         if(!activitySettings["categorias"].includes(category)) {
@@ -50,11 +50,11 @@ const handleMessage = async (client, message) => {
         }
 
         // console.log(`Data do check-in em UTC: ${date.format()}`);
-        await processCheckIn(client, message, userId, userName, activity, category, date, isOverdue);
+        await processCheckIn(client, message, userId, userName, activitySettings, activityId, category, date, isOverdue);
 
     } else if (normalizedMessage === '!ranking') {
         
-        rankingMessage = await getRanking(activity);
+        rankingMessage = await getRanking(activityId);
 
         client.sendMessage(message.from, rankingMessage);
     }

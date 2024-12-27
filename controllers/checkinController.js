@@ -2,7 +2,7 @@ const moment = require('moment-timezone');
 const Checkin = require('../models/checkin');
 const User = require('../models/user');
 
-const processCheckIn = async (client, message, userId, userName, activity, category, dateUTC, isOverdue) => {
+const processCheckIn = async (client, message, userId, userName, activitySettings, activityId, category, dateUTC, isOverdue) => {
     // Converte a data UTC para o horário do Brasil (BRT)
     const dateBRT = moment(dateUTC).tz('America/Sao_Paulo');
 
@@ -10,9 +10,7 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
     const startOfDay = dateBRT.clone().startOf('day').utc().toDate();
     const endOfDay = dateBRT.clone().endOf('day').utc().toDate();
 
-    // console.log('Data em UTC:', dateUTC);
-    // console.log('Início do dia em UTC:', startOfDay);
-    // console.log('Fim do dia em UTC:', endOfDay);
+    atividade = activitySettings["atividade"]
 
     // Verifica se o usuário já existe
     const userAlreadyExist = await User.findOne({
@@ -34,7 +32,7 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
     // Verifica se o usuário já fez check-in na mesma atividade, categoria e data
     const alreadyCheckedIn = await Checkin.findOne({
         'userId': userId,
-        'activity': activity,
+        'activity': activityId,
         'category': category,
         'date': {
             $gte: startOfDay, // Início do dia em UTC
@@ -49,7 +47,7 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
     if (alreadyCheckedIn) {
         client.sendMessage(
             message.from,
-            `⚠️ ${userName}, você *já fez* um check-in para *${activity}* na categoria *${category}* em *${formatedDateBRT}*.`
+            `⚠️ ${userName}, você *já fez* um check-in para atividade *${atividade}* na categoria *${category}* em *${formatedDateBRT}*.`
         );
         return;
     }
@@ -57,7 +55,7 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
     // Cria um novo check-in
     const newCheckIn = new Checkin({
         'userId': userId,
-        'activity': activity,
+        'activity': activityId,
         'category': category,
         'date': dateUTC, // Armazena a data original em UTC
         'isOverdue': isOverdue
@@ -67,7 +65,7 @@ const processCheckIn = async (client, message, userId, userName, activity, categ
 
     client.sendMessage(
         message.from,
-        `🥳 *Parabéns* ${userName}! Check-in registrado para *${activity}* na categoria *${category}* na data de *${formatedDateBRT}*!`
+        `🥳 *Parabéns* ${userName}! Check-in registrado para atividade *${atividade}* na categoria *${category}* na data de *${formatedDateBRT}*!`
     );
 };
 
