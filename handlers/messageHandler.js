@@ -33,7 +33,7 @@ const handleMessage = async (client, message) => {
         atividade = activitySettings["atividade"]
 
         if(!activitySettings["categorias"].includes(category)) {
-            client.sendMessage(message.from, `A categoria "${category}" não é aceito para a atividade de ${atividade}. Por favor, use uma das seguintes categorias: ${activitySettings["categorias"].join(', ')}.`);
+            client.sendMessage(message.from, `A categoria *"${category}"* não é aceito para a atividade de *${atividade}*. Por favor, use uma das seguintes categorias: *${activitySettings["categorias"].join(', ')}*.`);
             return
         }
 
