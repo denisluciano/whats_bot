@@ -52,7 +52,7 @@ const getRanking = async (activity) => {
     year = moment().year()
 
     // Monta a mensagem de ranking
-    let rankingMessage = `*Ranking desafio ${year}*\n\n`;
+    let rankingMessage = `*🏆 Ranking desafio ${year} 🏆*\n\n`;
     let currentPosition = 1;
     let lastCheckIns = null;
 
