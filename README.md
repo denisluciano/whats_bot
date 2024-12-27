@@ -21,3 +21,33 @@ Os usuários podem fazer check-ins enviando mensagens no formato `ta pago <idiom
 - Ranking por usuário dividido em períodos: geral, anual, mensal e semanal.
 - Suporte a múltiplos idiomas, com contagem de apenas um check-in por idioma por dia.
 
+
+project/
+├── controllers/
+│   ├── checkinController.js   // Lógica de check-ins (processa e salva no banco)
+│   ├── rankingController.js   // Lógica de rankings (exibe rankings gerais ou individuais)
+├── handlers/
+│   ├── messageHandler.js      // Lida com mensagens recebidas e decide o fluxo
+├── models/
+│   ├── Ranking.js             // Modelo Mongoose para check-ins e rankings
+├── utils/
+│   ├── dateUtils.js           // Funções para manipulação de datas
+│   ├── normalizeText.js       // Função para normalizar texto (remover acentos, etc.)
+├── config/
+│   ├── groupContexts.js       // IDs dos grupos e seus contextos (línguas, academia)
+├── index.js                     // Arquivo principal do aplicativo
+├── .env                       // Variáveis de ambiente (chaves do MongoDB, etc.)
+└── package.json               // Dependências e scripts do projeto
+
+
+## Lidar com hora e timezone
+Lidar com hora e timezone no BOT é uma coisa super importante e chata.
+Pois estando no Brasil, se a pessoa fazer check-in por exemplo 22:00, o UTC é 01:00 do dia seguinte
+com isso se não for tratado direto se a pessoa tentar fazer check-in no dia seguinte o bot pode falar que 
+já foi feito o check-in
+
+Convesão:
+- No Handler já pegamos a hora, convertemos para UTC.
+- Salvamos as datas todas em UTC.
+- Quando formos comparar fazemos as conversões para BRT
+- Além disso usaremos a biblioteca Moment Timezone.
