@@ -2,11 +2,11 @@ const moment = require('moment-timezone');
 const { processCheckIn } = require('../controllers/checkinController');
 const { getRanking } = require('../controllers/rankingController');
 const groupContexts = require('../config/groupContexts');
+const activitiesSettings = require('../config/activitiesSettings');
 const { normalizeText } = require('../utils/textUtils');
 
+
 const handleMessage = async (client, message) => {
-    const groupId = message.from;
-    const activity = groupContexts[groupId];
 
     // Normaliza o texto da mensagem
     const normalizedMessage = normalizeText(message.body);
@@ -15,7 +15,10 @@ const handleMessage = async (client, message) => {
         client.sendMessage(message.from, `ID do Grupo: ${message.from}`);
     }
 
-    if (!activity) {
+    const groupId = message.from;
+    const activityId = groupContexts[groupId];
+
+    if (!activityId) {
         return; // grupo não está na lista permitida
     }
 
@@ -23,6 +26,16 @@ const handleMessage = async (client, message) => {
         const [_, __, category, timeframe] = normalizedMessage.split(' ');
         const userId = message.author || message.from;
         const userName = message._data.notifyName;
+
+        //verificando se é uma categoria válida
+        activitySettings = activitiesSettings[activityId]
+
+        atividade = activitySettings["atividade"]
+
+        if(!activitySettings["categorias"].includes(category)) {
+            client.sendMessage(message.from, `A categoria "${category}" não é aceito para a atividade de ${atividade}. Por favor, use uma das seguintes categorias: ${activitySettings["categorias"].join(', ')}.`);
+            return
+        }
 
         // Pega a data UTC atual
         let utcNow = moment.utc(); // Momento atual em UTC
