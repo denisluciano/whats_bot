@@ -56,7 +56,8 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
         'challengeId': challenge._id,
         'category': category,
         'date': dateUTC, // Armazena a data original em UTC
-        'isOverdue': isOverdue
+        'isOverdue': isOverdue,
+        'creationTime': moment.utc()
     });
 
     await newCheckIn.save();
