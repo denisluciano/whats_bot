@@ -38,8 +38,6 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
         },
     });
 
-    // console.log('Check-in encontrado:', alreadyCheckedIn);
-
     formatedDateBRT = dateBRT.format('DD/MM/YYYY')
 
     if (alreadyCheckedIn) {
