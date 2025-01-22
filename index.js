@@ -1,7 +1,7 @@
 const qrcode = require("qrcode");
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { handleMessage } = require('./handlers/messageHandler');
-const { cronHandleMessage } = require('./handlers/messageHandler');
+const { cronHandleMessage } = require('./handlers/cronHandler');
 const connectToMongoDB = require('./config/mongoConnection');
 const cron = require('node-cron');
 
