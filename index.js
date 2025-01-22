@@ -1,7 +1,9 @@
 const qrcode = require("qrcode");
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { handleMessage } = require('./handlers/messageHandler');
-const connectToMongoDB = require('./config/mongoConnection'); 
+const { cronHandleMessage } = require('./handlers/messageHandler');
+const connectToMongoDB = require('./config/mongoConnection');
+const cron = require('node-cron');
 
 // Inicialize a conexão com o MongoDB
 connectToMongoDB();
@@ -9,15 +11,15 @@ connectToMongoDB();
 // Creating a new instance of the client
 const client = new Client({
     puppeteer: {
-      // Runs Chrome in headless mode (without a user interface).
-      headless: true,
-      args: [
-        // Disables Chrome's sandboxing features. This is necessary when running
-        // Puppeteer in certain environments like Docker containers.
-        "--no-sandbox",
-        // Additional sandboxing flag to disable setuid sandbox.
-        "--disable-setuid-sandbox",
-      ],
+        // Runs Chrome in headless mode (without a user interface).
+        headless: true,
+        args: [
+            // Disables Chrome's sandboxing features. This is necessary when running
+            // Puppeteer in certain environments like Docker containers.
+            "--no-sandbox",
+            // Additional sandboxing flag to disable setuid sandbox.
+            "--disable-setuid-sandbox",
+        ],
     },
 
     // Este código salva a sessão, evitando a necessidade de autenticar novamente a cada execução.
@@ -27,36 +29,50 @@ const client = new Client({
     // Isso pode gerar inconsistências nos dados, pois as mesmas mensagens podem ser processadas duas vezes ou em ordens diferentes.
     // ------> SE ESSA LINHA ABAIXO ESTIVER DESCOMENTADA, IMPORTANTE:
     // ------> SEMPRE QUE FOR ALTERNAR A EXECUÇÃO EM OUTRO AMBIENTE, DELETAR A PASTA ".wwebjs_auth" ANTES DE RODAR
-    authStrategy: new LocalAuth(), 
+    authStrategy: new LocalAuth(),
 
     // Setting the webVersionCache option
     webVersionCache: {
-      // Setting the type as "remote", which means that the WhatsApp Web version will be fetched from a remote URL
-      type: "remote",
-      // Setting the remote path for the WhatsApp Web version
-      remotePath: "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1017091165-alpha.html",
+        // Setting the type as "remote", which means that the WhatsApp Web version will be fetched from a remote URL
+        type: "remote",
+        // Setting the remote path for the WhatsApp Web version
+        remotePath: "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1017091165-alpha.html",
     },
-  });
+});
 
 
 // This event is fired when whatsapp-web.js generates a new QR code
 client.on("qr", async (qr) => {
     // Here we are using the qrcode library to generate a QR Code and save it as a file
     try {
-      await qrcode.toFile("./qrcode.png", qr);
-      console.log("QR Code saved as qrcode.png");
+        await qrcode.toFile("./qrcode.png", qr);
+        console.log("QR Code saved as qrcode.png");
     } catch (err) {
-      console.error(err);
+        console.error(err);
     }
-  });
+});
 
 client.on('ready', () => {
     console.log('Client is ready!');
+
+
+    // Agendamento cron
+    cron.schedule('* * * * *', async () => {
+        console.log('Enviando ranking');
+
+        try {
+            // Passa a mensagem simulada para o handler
+            await cronHandleMessage(client, 'ranking');
+        } catch (error) {
+            console.error('Erro ao enviar o cron:', error);
+        }
+    });
+
 });
 
 client.on('message', async message => {
-    
-  await handleMessage(client, message); // Delega ao messageHandler
+
+    await handleMessage(client, message); // Delega ao messageHandler
 });
 
 client.initialize();
