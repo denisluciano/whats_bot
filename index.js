@@ -61,7 +61,7 @@ client.on('ready', () => {
 
 
     // Agendamento cron
-    cron.schedule('05 22 * * *', async () => {
+    cron.schedule('0 7 * * *', async () => {
         console.log('Enviando ranking');
 
         try {
