@@ -1,9 +1,13 @@
 const qrcode = require("qrcode");
 const { Client, LocalAuth } = require('whatsapp-web.js');
+const cron = require('node-cron');
+const moment = require('moment-timezone');
+
 const { handleMessage } = require('./handlers/messageHandler');
 const { cronHandleMessage } = require('./handlers/cronHandler');
 const connectToMongoDB = require('./config/mongoConnection');
-const cron = require('node-cron');
+
+
 
 // Inicialize a conexão com o MongoDB
 connectToMongoDB();
@@ -57,15 +61,18 @@ client.on('ready', () => {
 
 
     // Agendamento cron
-    cron.schedule('* * * * *', async () => {
+    cron.schedule('05 22 * * *', async () => {
         console.log('Enviando ranking');
 
         try {
             // Passa a mensagem simulada para o handler
-            await cronHandleMessage(client, 'ranking');
+            await cronHandleMessage(client, 'ranking_diario');
         } catch (error) {
             console.error('Erro ao enviar o cron:', error);
         }
+    }, {
+        // Define o fuso horário como America/Sao_Paulo
+        timezone: "America/Sao_Paulo"
     });
 
 });

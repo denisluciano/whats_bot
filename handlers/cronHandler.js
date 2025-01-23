@@ -1,7 +1,5 @@
 const moment = require('moment-timezone');
-const { processCheckIn } = require('../controllers/checkinController');
 const { getRanking } = require('../controllers/rankingController');
-const { normalizeText } = require('../utils/textUtils');
 const Challenge = require('../models/challenge');
 
 
@@ -11,8 +9,7 @@ const cronHandleMessage = async (client, command) => {
     let utcNow = moment.utc(); // Momento atual em UTC
 
     // Encontrar o desafio 
-    const challenge = await Challenge.findOne({
-        'groupId': groupId,
+    const challenges = await Challenge.find({
         'startDate': {
             $lte: utcNow,    
         },
@@ -21,39 +18,26 @@ const cronHandleMessage = async (client, command) => {
         },
     });
 
-    if (!challenge) {
+    if (!challenges || challenges.length === 0) {
         return; // grupo não possui um desafio ativo
     }
 
-    if (normalizedMessage.startsWith('ta pago')) {
-        const [_, __, category, timeframe] = normalizedMessage.split(' ');
-        const userId = message.author || message.from;
-        const userName = message._data.notifyName;
+    if (command === 'ranking_diario') {
 
-        //verificando se é uma categoria válida
-        activity = challenge.activity
+        // Itera sobre os desafios encontrados
+        for (const challenge of challenges) {
+            try {
+                // Obtém o ranking para o desafio específico
+                const rankingMessage = await getRanking(challenge);
 
-        if(!challenge.categories.includes(category)) {
-            client.sendMessage(message.from, `A categoria *"${category}"* não é aceito para a atividade de *${activity}*. Por favor, use uma das seguintes categorias: *${challenge.categories.join(', ')}*.`);
-            return
+                // Envia a mensagem para o grupo associado ao desafio
+                if (rankingMessage) {
+                    await client.sendMessage(challenge.groupId, rankingMessage);
+                }
+            } catch (error) {
+                console.error(`Erro ao enviar ranking para o desafio ${challenge._id}:`, error);
+            }
         }
-
-        // Define a data com base no "ontem" ou "hoje"
-        let date = utcNow;
-        let isOverdue = false;
-        
-        if (timeframe === 'ontem') {
-            date = moment.tz('America/Sao_Paulo').subtract(1, 'day').startOf('day').utc();
-            isOverdue = true;
-        }
-
-        await processCheckIn(client, message, userId, userName, challenge, category, date, isOverdue);
-
-    } else if (normalizedMessage === '!ranking') {
-        
-        rankingMessage = await getRanking(challenge);
-
-        client.sendMessage(message.from, rankingMessage);
     }
 };
 
