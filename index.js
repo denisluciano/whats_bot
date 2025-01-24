@@ -61,8 +61,7 @@ client.on('ready', () => {
 
 
     // Agendamento cron
-    cron.schedule('0 7 * * *', async () => {
-        console.log('Enviando ranking');
+    cron.schedule('0 6 * * *', async () => {
 
         try {
             // Passa a mensagem simulada para o handler
