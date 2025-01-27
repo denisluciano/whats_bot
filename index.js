@@ -61,7 +61,7 @@ client.on('ready', () => {
 
 
     // Agendamento cron
-    cron.schedule('0 6 * * *', async () => {
+    cron.schedule('30 6 * * *', async () => {
 
         try {
             // Passa a mensagem simulada para o handler
