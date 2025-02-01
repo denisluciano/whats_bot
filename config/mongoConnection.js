@@ -17,8 +17,5 @@ const connectToMongoDB = async () => {
     }
 };
 
-// Conectar automaticamente ao iniciar a aplicação
-connectToMongoDB();
-
 // Exporta a conexão para ser usada em outros arquivos, se necessário
 module.exports = connectToMongoDB;
