@@ -1,12 +1,24 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/postgresConnection');
 
-const userSchema = new mongoose.Schema({
-    userId: String,
-    userName: String,
-    notificationEnabled: Boolean,
-    creationTime: Date
+const User = sequelize.define('User', {
+    userId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
+    },
+    userName: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    notificationEnabled: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    creationTime: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    }
 });
-
-const User = mongoose.model('User', userSchema);
 
 module.exports = User;

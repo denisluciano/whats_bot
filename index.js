@@ -1,16 +1,21 @@
 const qrcode = require("qrcode");
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const cron = require('node-cron');
-const moment = require('moment-timezone');
 
 const { handleMessage } = require('./handlers/messageHandler');
 const { cronHandleMessage } = require('./handlers/cronHandler');
-const connectToMongoDB = require('./config/mongoConnection');
+
+const { connectToPostgreSQL } = require('./config/postgresConnection');
+const { sequelize } = require('./config/postgresConnection');
 
 
 
 // Inicialize a conexão com o MongoDB
-connectToMongoDB();
+connectToPostgreSQL();
+
+sequelize.sync({ alter: true })
+    .then(() => console.log('📦 Banco de dados sincronizado!'))
+    .catch(err => console.error('❌ Erro ao sincronizar o banco:', err));
 
 // Creating a new instance of the client
 const client = new Client({

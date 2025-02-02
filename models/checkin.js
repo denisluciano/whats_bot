@@ -1,18 +1,35 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/postgresConnection');
+const User = require('./user');
 
-const checkinSchema = new mongoose.Schema({
-    userId: String,
-    challengeId: { // Referência ao Challenge
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Challenge',
-        required: true // Torne obrigatório se cada checkin precisar estar associado a um desafio
+const Checkin = sequelize.define('Checkin', {
+    userId: {
+        type: DataTypes.STRING,
+        references: {
+            model: User,
+            key: 'userId'
+        }
     },
-    category: String,
-    date: Date,
-    isOverdue: Boolean, //se enviou com a flag de "ontem" 
-    creationTime: Date
+    challengeId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    category: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    date: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    isOverdue: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    creationTime: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    }
 });
-
-const Checkin = mongoose.model('Checkin', checkinSchema);
 
 module.exports = Checkin;
