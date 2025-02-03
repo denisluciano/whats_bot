@@ -7,7 +7,7 @@ const { cronHandleMessage } = require('./handlers/cronHandler');
 
 const { connectToPostgreSQL } = require('./config/postgresConnection');
 const { sequelize } = require('./config/postgresConnection');
-require('./models/associations'); // Carrega as associações
+require('./models/associations'); // Carrega as associações 
 
 
 connectToPostgreSQL();
