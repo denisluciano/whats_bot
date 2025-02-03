@@ -2,11 +2,10 @@ const moment = require('moment-timezone');
 const { processCheckIn } = require('../controllers/checkinController');
 const { getRanking } = require('../controllers/rankingController');
 const { normalizeText } = require('../utils/textUtils');
+const { Op } = require('sequelize');
 const Challenge = require('../models/challenge');
 
-
 const handleMessage = async (client, message) => {
-
     // Normaliza o texto da mensagem
     const normalizedMessage = normalizeText(message.body);
 
@@ -17,21 +16,25 @@ const handleMessage = async (client, message) => {
     const groupId = message.from;
 
     // Pega a data UTC atual
-    let utcNow = moment.utc(); // Momento atual em UTC
+    let utcNow = moment.utc();
 
-    // Encontrar o desafio 
+    console.log("utcNow:")
+    console.log(utcNow)
+
+    console.log("utcNow.toDate:")
+    console.log(utcNow.toDate())
+
+    // Encontrar o desafio ativo no banco de dados (PostgreSQL)
     const challenge = await Challenge.findOne({
-        'groupId': groupId,
-        'startDate': {
-            $lte: utcNow,    
-        },
-        'endDate': {
-            $gte: utcNow,    
-        },
+        where: {
+            groupId: groupId,
+            startDate: { [Op.lte]: utcNow.toDate() },
+            endDate: { [Op.gte]: utcNow.toDate() }
+        }
     });
 
     if (!challenge) {
-        return; // grupo não possui um desafio ativo
+        return; // Grupo não possui um desafio ativo
     }
 
     if (normalizedMessage.startsWith('ta pago')) {
@@ -39,15 +42,16 @@ const handleMessage = async (client, message) => {
         const userId = message.author || message.from;
         const userName = message._data.notifyName;
 
-        //verificando se é uma categoria válida
-        activity = challenge.activity
-
-        if(!challenge.categories.includes(category)) {
-            client.sendMessage(message.from, `A categoria *"${category}"* não é aceito para a atividade de *${activity}*. Por favor, use uma das seguintes categorias: *${challenge.categories.join(', ')}*.`);
-            return
+        // Verifica se a categoria é válida
+        if (!challenge.categories.includes(category)) {
+            client.sendMessage(
+                message.from,
+                `A categoria *"${category}"* não é aceita para a atividade *${challenge.activity}*. Por favor, use uma das seguintes categorias: *${challenge.categories.join(', ')}*.`
+            );
+            return;
         }
 
-        // Define a data com base no "ontem" ou "hoje"
+        // Define a data do check-in
         let date = utcNow;
         let isOverdue = false;
         
@@ -59,9 +63,7 @@ const handleMessage = async (client, message) => {
         await processCheckIn(client, message, userId, userName, challenge, category, date, isOverdue);
 
     } else if (normalizedMessage === '!ranking') {
-        
-        rankingMessage = await getRanking(challenge);
-
+        const rankingMessage = await getRanking(challenge);
         client.sendMessage(message.from, rankingMessage);
     }
 };

@@ -1,29 +1,30 @@
 const moment = require('moment-timezone');
+const { Op } = require('sequelize');
 const Checkin = require('../models/checkin');
 const User = require('../models/user');
 
 const getRanking = async (challenge) => {
-
-    // Filtra check-ins diretamente no banco de dados
-    const allCheckIns = await Checkin.find({
-        challengeId: challenge._id,
-        date: { 
-            $gte: challenge.startDate,
-            $lte: challenge.endDate 
-        },
+    // Busca todos os check-ins dentro do período do desafio
+    const allCheckIns = await Checkin.findAll({
+        where: {
+            challengeId: challenge.id,
+            date: {
+                [Op.between]: [challenge.startDate, challenge.endDate]
+            }
+        }
     });
 
-    // Função para contar check-ins únicos por usuário (1 por dia)
+    // Função para contar check-ins únicos por dia
     const countUniqueCheckIns = (checkIns) => {
         const uniqueDays = new Set();
         checkIns.forEach((checkIn) => {
             const date = moment(checkIn.date).tz('America/Sao_Paulo').format('YYYY-MM-DD');
-            uniqueDays.add(date); // Adiciona apenas a data ao conjunto
+            uniqueDays.add(date);
         });
-        return uniqueDays.size; // Retorna o número de dias únicos
+        return uniqueDays.size;
     };
 
-    // Agrupa check-ins por usuário
+    // Agrupar check-ins por usuário
     const userCheckinCounts = allCheckIns.reduce((acc, checkIn) => {
         const userId = checkIn.userId;
         if (!acc[userId]) {
@@ -33,26 +34,22 @@ const getRanking = async (challenge) => {
         return acc;
     }, {});
 
-    // Gera o ranking anual
+    // Gerar o ranking
     const rankingAnual = Object.keys(userCheckinCounts)
-        .map((userId) => {
-            const userCheckIns = userCheckinCounts[userId];
-            return {
-                userId,
-                totalCheckIns: countUniqueCheckIns(userCheckIns), // Conta apenas dias únicos
-            };
-        })
+        .map((userId) => ({
+            userId,
+            totalCheckIns: countUniqueCheckIns(userCheckinCounts[userId])
+        }))
         .sort((a, b) => b.totalCheckIns - a.totalCheckIns);
 
-    // Adiciona os nomes dos usuários ao ranking
+    // Buscar os nomes dos usuários
     for (const entry of rankingAnual) {
-        const user = await User.findOne({ userId: entry.userId });
+        const user = await User.findOne({ where: { userId: entry.userId } });
         entry.userName = user ? user.userName : 'Usuário desconhecido';
     }
 
-
     // Monta a mensagem de ranking
-    let rankingMessage = `*🏆 Ranking do desafio de ${challenge.name} 🏆*\n\n`;
+    let rankingMessage = `*🏆 Ranking do desafio de ${challenge.activity} 🏆*\n\n`;
     let currentPosition = 1;
     let lastCheckIns = null;
 

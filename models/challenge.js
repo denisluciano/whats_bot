@@ -1,16 +1,35 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/postgresConnection');
 
-const challengeSchema = new mongoose.Schema({
-    groupId: String,
-    name: String,
-    activity: String,
-    categories: [String],
-    startDate: Date,
-    endDate: Date,
-    creationTime: Date
-
+const Challenge = sequelize.define('Challenge', {
+    groupId: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    activity: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    categories: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: false
+    },
+    startDate: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    endDate: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    creationTime: {
+        type: DataTypes.DATE,
+        allowNull: true
+    }
 });
-
-const Challenge = mongoose.model('Challenge', challengeSchema);
 
 module.exports = Challenge;
