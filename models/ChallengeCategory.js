@@ -1,15 +1,10 @@
-// models/ChallengeCategory.js
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/postgresConnection');
-const Challenge = require('./challenge');
 
 const ChallengeCategory = sequelize.define('ChallengeCategory', {
     challengeId: {
         type: DataTypes.INTEGER,
-        references: {
-            model: Challenge,
-            key: 'id'
-        }
+        allowNull: false
     },
     category: {
         type: DataTypes.STRING,
@@ -18,7 +13,8 @@ const ChallengeCategory = sequelize.define('ChallengeCategory', {
     creationTime: {
         type: DataTypes.DATE,
         allowNull: true
-    }
+    },
 });
 
+// Exporte o modelo sem associações ainda
 module.exports = ChallengeCategory;

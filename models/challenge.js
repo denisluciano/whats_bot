@@ -1,18 +1,13 @@
-// models/challenge.js
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/postgresConnection');
-const ChallengeCategory = require('./ChallengeCategory');
 
+// Defina o modelo primeiro, sem associar
 const Challenge = sequelize.define('Challenge', {
     groupId: {
         type: DataTypes.STRING,
         allowNull: false
     },
     name: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    activity: {
         type: DataTypes.STRING,
         allowNull: false
     },
@@ -27,11 +22,8 @@ const Challenge = sequelize.define('Challenge', {
     creationTime: {
         type: DataTypes.DATE,
         allowNull: true
-    }
+    },
 });
 
-// Relação 1:N entre Challenge e ChallengeCategory
-Challenge.hasMany(ChallengeCategory, { foreignKey: 'challengeId' });
-ChallengeCategory.belongsTo(Challenge, { foreignKey: 'challengeId' });
-
+// Exporte sem associações ainda
 module.exports = Challenge;

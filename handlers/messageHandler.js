@@ -3,7 +3,7 @@ const { processCheckIn } = require('../controllers/checkinController');
 const { getRanking } = require('../controllers/rankingController');
 const { normalizeText } = require('../utils/textUtils');
 const { Op } = require('sequelize');
-const Challenge = require('../models/challenge');
+const { Challenge, ChallengeCategory } = require('../models/associations'); // 🔥 Importação correta!
 
 const handleMessage = async (client, message) => {
     const normalizedMessage = normalizeText(message.body);
@@ -15,13 +15,14 @@ const handleMessage = async (client, message) => {
     const groupId = message.from;
     let utcNow = moment.utc();
 
+    // Busca o desafio ativo e inclui as categorias associadas
     const challenge = await Challenge.findOne({
         where: {
             groupId: groupId,
             startDate: { [Op.lte]: utcNow.toDate() },
             endDate: { [Op.gte]: utcNow.toDate() }
         },
-        include: [ChallengeCategory] // Inclui as categorias associadas
+        include: [{ model: ChallengeCategory }] // 🔥 Corrigido
     });
 
     if (!challenge) {

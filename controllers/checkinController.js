@@ -9,11 +9,12 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
     const endOfDay = dateBRT.clone().endOf('day').utc().toDate();
 
     // Verifica se a categoria é válida
-    const validCategories = challenge.ChallengeCategories.map(cc => cc.category);
+    const validCategories = challenge.ChallengeCategories?.map(cc => cc.category) || [];
+    
     if (!validCategories.includes(category)) {
         client.sendMessage(
             message.from,
-            `A categoria *"${category}"* não é aceita para a atividade *${challenge.activity}*. Por favor, use uma das seguintes categorias: *${validCategories.join(', ')}*.`
+            `A categoria *"${category}"* não é aceita para a atividade *${challenge.name}*. Por favor, use uma das seguintes categorias: *${validCategories.join(', ')}*.`
         );
         return;
     }
@@ -42,7 +43,7 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
     if (alreadyCheckedIn) {
         client.sendMessage(
             message.from,
-            `⚠️ ${userName}, você *já fez* um check-in para atividade *${challenge.activity}* na categoria *${category}* em *${dateBRT.format('DD/MM/YYYY')}*.`
+            `⚠️ ${userName}, você *já fez* um check-in para atividade *${challenge.name}* na categoria *${category}* em *${dateBRT.format('DD/MM/YYYY')}*.`
         );
         return;
     }
@@ -59,7 +60,7 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
 
     client.sendMessage(
         message.from,
-        `🥳 *Parabéns* ${userName}! Check-in registrado para atividade *${challenge.activity}* na categoria *${category}* na data de *${dateBRT.format('DD/MM/YYYY')}*!`
+        `🥳 *Parabéns* ${userName}! Check-in registrado para atividade *${challenge.name}* na categoria *${category}* na data de *${dateBRT.format('DD/MM/YYYY')}*!`
     );
 };
 
