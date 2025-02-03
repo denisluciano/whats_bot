@@ -12,7 +12,6 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "moment-timezone": "^0.5.47",
-    "mongoose": "^8.9.6",
     "node-cron": "^3.0.3",
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",

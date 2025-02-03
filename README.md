@@ -1,53 +1,50 @@
-# Projeto de Ranking de Check-ins de Idiomas para WhatsApp
+# 📚 Bot de Check-in e Ranking de Desafios
 
-Este é um bot para WhatsApp que permite que usuários façam check-ins diários ao estudarem diferentes idiomas. O bot utiliza o `whatsapp-web.js` para interagir com o WhatsApp, registrando as atividades de estudo em um banco de dados MongoDB e fornecendo rankings diários, semanais, mensais e anuais para acompanhar o progresso.
+Este projeto é um bot que gerencia check-ins e rankings para desafios em grupos. Ele permite que os participantes registrem suas atividades diárias (check-ins) e visualizem um ranking baseado na consistência desses check-ins. O bot é integrado ao WhatsApp para facilitar a interação com os usuários.
 
-## Como Funciona
+## 🚀 Funcionalidades
 
-Os usuários podem fazer check-ins enviando mensagens no formato `ta pago <idioma>` para registrar sua atividade de estudo. O bot salva esses registros no MongoDB e gera rankings de frequência para cada idioma, permitindo que os usuários acompanhem seu progresso geral, anual, mensal e semanal. Somente um check-in por idioma é contabilizado por dia, mesmo que o usuário estude mais de um idioma no mesmo dia.
+- **Check-in diário**: Os usuários podem registrar suas atividades diárias usando comandos como `ta pago <categoria>`.
+- **Ranking**: O bot gera um ranking diário ou geral com base nos check-ins registrados.
+- **Categorias personalizadas**: Cada desafio pode ter categorias específicas, como "Leitura", "Exercícios", etc.
+- **Notificações automáticas**: O bot pode enviar rankings diários automaticamente para os grupos.
+- **Banco de dados**: Utiliza PostgreSQL para armazenar desafios, check-ins e usuários.
 
-## Tecnologias Utilizadas
+## 🛠️ Tecnologias Utilizadas
 
-- **Node.js**: Ambiente de execução para o JavaScript do lado do servidor.
-- **whatsapp-web.js**: Biblioteca para interagir com a API do WhatsApp Web.
-- **MongoDB**: Banco de dados NoSQL para armazenar os check-ins dos usuários.
-- **Mongoose**: Biblioteca para modelagem de dados do MongoDB no Node.js.
-- **dotenv**: Gerenciamento de variáveis de ambiente para configuração do projeto.
+- **Node.js**: Ambiente de execução do bot.
+- **Sequelize**: ORM para interação com o banco de dados PostgreSQL.
+- **Moment-timezone**: Biblioteca para manipulação de datas e fusos horários.
+- **WhatsApp Web JS**: Biblioteca para integração com o WhatsApp.
+- **PostgreSQL**: Banco de dados relacional para armazenamento de dados.
 
-## Recursos
+---
 
-- Registro de check-ins diários por idioma.
-- Validação para permitir check-ins apenas para idiomas suportados.
-- Ranking por usuário dividido em períodos: geral, anual, mensal e semanal.
-- Suporte a múltiplos idiomas, com contagem de apenas um check-in por idioma por dia.
+## 📋 Pré-requisitos
 
+Antes de começar, você precisará ter instalado:
 
-project/
-├── controllers/
-│   ├── checkinController.js   // Lógica de check-ins (processa e salva no banco)
-│   ├── rankingController.js   // Lógica de rankings (exibe rankings gerais ou individuais)
-├── handlers/
-│   ├── messageHandler.js      // Lida com mensagens recebidas e decide o fluxo
-├── models/
-│   ├── Ranking.js             // Modelo Mongoose para check-ins e rankings
-├── utils/
-│   ├── dateUtils.js           // Funções para manipulação de datas
-│   ├── normalizeText.js       // Função para normalizar texto (remover acentos, etc.)
-├── config/
-│   ├── groupContexts.js       // IDs dos grupos e seus contextos (línguas, academia)
-├── index.js                     // Arquivo principal do aplicativo
-├── .env                       // Variáveis de ambiente (chaves do MongoDB, etc.)
-└── package.json               // Dependências e scripts do projeto
+1. **Node.js** (versão 16 ou superior).
+2. **PostgreSQL** (versão 12 ou superior).
+3. **Conta do WhatsApp** para configurar o bot.
 
+---
 
-## Lidar com hora e timezone
-Lidar com hora e timezone no BOT é uma coisa super importante e chata.
-Pois estando no Brasil, se a pessoa fazer check-in por exemplo 22:00, o UTC é 01:00 do dia seguinte
-com isso se não for tratado direto se a pessoa tentar fazer check-in no dia seguinte o bot pode falar que 
-já foi feito o check-in
+## 🛠️ Configuração do Projeto
 
-Convesão:
-- No Handler já pegamos a hora, convertemos para UTC.
-- Salvamos as datas todas em UTC.
-- Quando formos comparar fazemos as conversões para BRT
-- Além disso usaremos a biblioteca Moment Timezone.
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/seu-usuario/seu-repositorio.git
+cd seu-repositorio
+
+.
+├── config/                  # Configurações do banco de dados
+├── controllers/             # Lógica de negócio (check-ins, ranking)
+├── handlers/                # Manipuladores de mensagens e eventos
+├── models/                  # Modelos do banco de dados (Challenge, Checkin, User)
+├── utils/                   # Utilitários (normalização de texto, etc.)
+├── .env                     # Variáveis de ambiente
+├── README.md                # Documentação do projeto
+├── package.json             # Dependências e scripts
+└── index.js                # Ponto de entrada do bot

@@ -9,8 +9,6 @@ const { connectToPostgreSQL } = require('./config/postgresConnection');
 const { sequelize } = require('./config/postgresConnection');
 
 
-
-// Inicialize a conexão com o MongoDB
 connectToPostgreSQL();
 
 sequelize.sync({ alter: true })
