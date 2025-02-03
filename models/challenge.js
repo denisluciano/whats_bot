@@ -1,5 +1,7 @@
+// models/challenge.js
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/postgresConnection');
+const ChallengeCategory = require('./ChallengeCategory');
 
 const Challenge = sequelize.define('Challenge', {
     groupId: {
@@ -12,10 +14,6 @@ const Challenge = sequelize.define('Challenge', {
     },
     activity: {
         type: DataTypes.STRING,
-        allowNull: false
-    },
-    categories: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: false
     },
     startDate: {
@@ -31,5 +29,9 @@ const Challenge = sequelize.define('Challenge', {
         allowNull: true
     }
 });
+
+// Relação 1:N entre Challenge e ChallengeCategory
+Challenge.hasMany(ChallengeCategory, { foreignKey: 'challengeId' });
+ChallengeCategory.belongsTo(Challenge, { foreignKey: 'challengeId' });
 
 module.exports = Challenge;
