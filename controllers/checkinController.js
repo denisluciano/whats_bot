@@ -20,7 +20,11 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
     let user = await User.findOne({ where: { userId } });
 
     if (!user) {
-        user = await User.create({ userId, userName });
+        user = await User.create({ 
+            userId: userId, 
+            userName: userName,
+            creationTime: moment.utc().toDate() 
+        });
     }
 
     const alreadyCheckedIn = await Checkin.findOne({
@@ -30,8 +34,7 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
             category,
             date: {
                 [Op.between]: [startOfDay, endOfDay]
-            },
-            creationTime: moment.utc().toDate()
+            }
         }
     });
 
