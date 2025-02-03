@@ -17,8 +17,9 @@ const User = sequelize.define('User', {
     },
     creationTime: {
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
+        allowNull: true
     }
+    
 });
 
 module.exports = User;

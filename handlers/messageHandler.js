@@ -18,6 +18,12 @@ const handleMessage = async (client, message) => {
     // Pega a data UTC atual
     let utcNow = moment.utc();
 
+    console.log("utcNow:")
+    console.log(utcNow)
+
+    console.log("utcNow.toDate:")
+    console.log(utcNow.toDate())
+
     // Encontrar o desafio ativo no banco de dados (PostgreSQL)
     const challenge = await Challenge.findOne({
         where: {
@@ -54,7 +60,7 @@ const handleMessage = async (client, message) => {
             isOverdue = true;
         }
 
-        await processCheckIn(client, message, userId, userName, challenge, category, date.toDate(), isOverdue);
+        await processCheckIn(client, message, userId, userName, challenge, category, date, isOverdue);
 
     } else if (normalizedMessage === '!ranking') {
         const rankingMessage = await getRanking(challenge);

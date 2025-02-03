@@ -28,7 +28,7 @@ const Checkin = sequelize.define('Checkin', {
     },
     creationTime: {
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
+        allowNull: true
     }
 });
 

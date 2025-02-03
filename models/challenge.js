@@ -6,6 +6,10 @@ const Challenge = sequelize.define('Challenge', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     activity: {
         type: DataTypes.STRING,
         allowNull: false
@@ -21,6 +25,10 @@ const Challenge = sequelize.define('Challenge', {
     endDate: {
         type: DataTypes.DATE,
         allowNull: false
+    },
+    creationTime: {
+        type: DataTypes.DATE,
+        allowNull: true
     }
 });
 
