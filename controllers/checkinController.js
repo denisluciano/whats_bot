@@ -15,7 +15,7 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
     // console.log(startOfDay)
 
     // console.log("endOfDay:")
-    // console.log(endOfDay)
+    // console.log(endOfDay) 
 
     let user = await User.findOne({ where: { userId } });
 
