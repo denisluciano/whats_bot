@@ -3,10 +3,9 @@ const { processCheckIn } = require('../controllers/checkinController');
 const { getRanking } = require('../controllers/rankingController');
 const { normalizeText } = require('../utils/textUtils');
 const { Op } = require('sequelize');
-const Challenge = require('../models/challenge');
+const { Challenge, ChallengeCategory } = require('../models/associations'); // 🔥 Importação correta!
 
 const handleMessage = async (client, message) => {
-    // Normaliza o texto da mensagem
     const normalizedMessage = normalizeText(message.body);
 
     if (normalizedMessage.startsWith('id do grupo')) {
@@ -14,23 +13,16 @@ const handleMessage = async (client, message) => {
     }
 
     const groupId = message.from;
-
-    // Pega a data UTC atual
     let utcNow = moment.utc();
 
-    console.log("utcNow:")
-    console.log(utcNow)
-
-    console.log("utcNow.toDate:")
-    console.log(utcNow.toDate())
-
-    // Encontrar o desafio ativo no banco de dados (PostgreSQL)
+    // Busca o desafio ativo e inclui as categorias associadas
     const challenge = await Challenge.findOne({
         where: {
             groupId: groupId,
             startDate: { [Op.lte]: utcNow.toDate() },
             endDate: { [Op.gte]: utcNow.toDate() }
-        }
+        },
+        include: [{ model: ChallengeCategory }] // 🔥 Corrigido
     });
 
     if (!challenge) {
@@ -41,15 +33,6 @@ const handleMessage = async (client, message) => {
         const [_, __, category, timeframe] = normalizedMessage.split(' ');
         const userId = message.author || message.from;
         const userName = message._data.notifyName;
-
-        // Verifica se a categoria é válida
-        if (!challenge.categories.includes(category)) {
-            client.sendMessage(
-                message.from,
-                `A categoria *"${category}"* não é aceita para a atividade *${challenge.activity}*. Por favor, use uma das seguintes categorias: *${challenge.categories.join(', ')}*.`
-            );
-            return;
-        }
 
         // Define a data do check-in
         let date = utcNow;

@@ -7,10 +7,9 @@ const { cronHandleMessage } = require('./handlers/cronHandler');
 
 const { connectToPostgreSQL } = require('./config/postgresConnection');
 const { sequelize } = require('./config/postgresConnection');
+require('./models/associations'); // Carrega as associações
 
 
-
-// Inicialize a conexão com o MongoDB
 connectToPostgreSQL();
 
 sequelize.sync({ alter: true })
@@ -65,19 +64,19 @@ client.on('ready', () => {
     console.log('Client is ready!');
 
 
-    // // Agendamento cron
-    // cron.schedule('30 6 * * *', async () => {
+    // Agendamento cron
+    cron.schedule('30 6 * * *', async () => {
 
-    //     try {
-    //         // Passa a mensagem simulada para o handler
-    //         await cronHandleMessage(client, 'ranking_diario');
-    //     } catch (error) {
-    //         console.error('Erro ao enviar o cron:', error);
-    //     }
-    // }, {
-    //     // Define o fuso horário como America/Sao_Paulo
-    //     timezone: "America/Sao_Paulo"
-    // });
+        try {
+            // Passa a mensagem simulada para o handler
+            await cronHandleMessage(client, 'ranking_diario');
+        } catch (error) {
+            console.error('Erro ao enviar o cron:', error);
+        }
+    }, {
+        // Define o fuso horário como America/Sao_Paulo
+        timezone: "America/Sao_Paulo"
+    });
 
 });
 

@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/postgresConnection');
 
+// Defina o modelo primeiro, sem associar
 const Challenge = sequelize.define('Challenge', {
     groupId: {
         type: DataTypes.STRING,
@@ -8,14 +9,6 @@ const Challenge = sequelize.define('Challenge', {
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false
-    },
-    activity: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    categories: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: false
     },
     startDate: {
@@ -29,7 +22,8 @@ const Challenge = sequelize.define('Challenge', {
     creationTime: {
         type: DataTypes.DATE,
         allowNull: true
-    }
+    },
 });
 
+// Exporte sem associações ainda
 module.exports = Challenge;

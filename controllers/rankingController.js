@@ -49,7 +49,7 @@ const getRanking = async (challenge) => {
     }
 
     // Monta a mensagem de ranking
-    let rankingMessage = `*🏆 Ranking do desafio de ${challenge.activity} 🏆*\n\n`;
+    let rankingMessage = `*🏆 Ranking do desafio de ${challenge.name} 🏆*\n\n`;
     let currentPosition = 1;
     let lastCheckIns = null;
 
