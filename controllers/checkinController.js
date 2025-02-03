@@ -30,7 +30,8 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
             category,
             date: {
                 [Op.between]: [startOfDay, endOfDay]
-            }
+            },
+            creationTime: moment.utc().toDate()
         }
     });
 
@@ -51,7 +52,8 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
         challengeId: challenge.id,
         category,
         date: moment.utc(dateUTC).toDate(), // Converte para UTC antes de salvar
-        isOverdue
+        isOverdue,
+        creationTime: moment.utc().toDate()
     });
 
     client.sendMessage(
