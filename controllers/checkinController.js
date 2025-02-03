@@ -8,14 +8,14 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
     const startOfDay = dateBRT.clone().startOf('day').utc().toDate();
     const endOfDay = dateBRT.clone().endOf('day').utc().toDate();
 
-    console.log("dateBRT:")
-    console.log(dateBRT)
+    // console.log("dateBRT:")
+    // console.log(dateBRT)
 
-    console.log("startOfDay:")
-    console.log(startOfDay)
+    // console.log("startOfDay:")
+    // console.log(startOfDay)
 
-    console.log("endOfDay:")
-    console.log(endOfDay)
+    // console.log("endOfDay:")
+    // console.log(endOfDay)
 
     let user = await User.findOne({ where: { userId } });
 
@@ -46,8 +46,8 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
         return;
     }
 
-    console.log("moment.utc(dateUTC).toDate():")
-    console.log(moment.utc(dateUTC).toDate())
+    // console.log("moment.utc(dateUTC).toDate():")
+    // console.log(moment.utc(dateUTC).toDate())
 
     // Criando o novo check-in garantindo que a data seja salva em UTC
     await Checkin.create({
