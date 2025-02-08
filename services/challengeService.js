@@ -1,11 +1,17 @@
 const Challenge = require('../models/challenge');
 const ChallengeCategory = require('../models/ChallengeCategory');
 const moment = require('moment-timezone');
+const { Op } = require('sequelize');
 
 // Função para buscar um challenge pelo groupId
 async function getChallengeByGroup(groupId) {
+
     return await Challenge.findOne({
-        where: { groupId },
+        where: { 
+            groupId,
+            startDate: { [Op.lte]: moment.utc().toDate() },
+            endDate: { [Op.gte]: moment.utc().toDate() }
+        },
         include: ChallengeCategory // Inclui as categorias associadas ao desafio
     });
 }
