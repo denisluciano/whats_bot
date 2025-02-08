@@ -4,6 +4,7 @@ const { getRanking } = require('../controllers/rankingController');
 const { normalizeText } = require('../utils/textUtils');
 const { Op } = require('sequelize');
 const { Challenge, ChallengeCategory } = require('../models/associations'); // 🔥 Importação correta!
+const { handleAddCategoryCommand, handleListCategoriesCommand  } = require('../controllers/categoryController');
 
 const handleMessage = async (client, message) => {
     const normalizedMessage = normalizeText(message.body);
@@ -48,6 +49,12 @@ const handleMessage = async (client, message) => {
     } else if (normalizedMessage === '!ranking') {
         const rankingMessage = await getRanking(challenge);
         client.sendMessage(message.from, rankingMessage);
+
+    } else if (normalizedMessage.startsWith('!addcategoria')) {
+        await handleAddCategoryCommand(message, client);
+
+    } else if (normalizedMessage === '!todascategorias') {
+        await handleListCategoriesCommand(message, client);
     }
 };
 
