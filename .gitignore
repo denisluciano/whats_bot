@@ -2,3 +2,4 @@
 /.wwebjs*
 .env
 qrcode.png
+*.dump
