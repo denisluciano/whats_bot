@@ -7,7 +7,13 @@ const sequelize = new Sequelize(process.env.POSTGRES_URI, {
     timezone: 'UTC',
     define: {
         timestamps: false,
-      },
+    },
+    dialectOptions: {
+        ssl: {
+          require: true, // This will help you. But you will see nwe error
+          rejectUnauthorized: false // This line will fix new error
+        }
+    }
 });
 
 const connectToPostgreSQL = async () => {
