@@ -30,13 +30,7 @@ Antes de começar, você precisará ter instalado:
 
 ---
 
-## 🛠️ Configuração do Projeto
-
-### 1. Clone o repositório
-
-```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
+## 📋 Estrutura do projeto
 
 .
 ├── config/                  # Configurações do banco de dados
@@ -48,3 +42,26 @@ cd seu-repositorio
 ├── README.md                # Documentação do projeto
 ├── package.json             # Dependências e scripts
 └── index.js                # Ponto de entrada do bot
+
+---
+
+## 🛠️ Configuração do Projeto
+
+### 1. Clone o repositório
+
+```bash
+git clone git@github.com:denisluciano/whats_bot.git
+cd whats_bot
+```
+
+### 2. instalar pacotes
+
+```bash
+npm install
+```
+
+### 2. executar projeto
+
+```bash
+npm start
+```
