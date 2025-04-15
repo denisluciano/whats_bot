@@ -1,13 +1,40 @@
-create or replace view reports."challenge" as
+-- create or replace view reports."challenge" as
+WITH ranked_checkins AS (
+  SELECT
+    c.username,
+    c.challenge_id,
+    COUNT(*) AS total_checkins,
+    ROW_NUMBER() OVER (PARTITION BY c.challenge_id ORDER BY COUNT(*) DESC) AS rank
+  FROM reports.checkins c
+  GROUP BY c.username, c.challenge_id
+),
+user_mais_ativo AS (
+  SELECT
+    username,
+    challenge_id,
+    total_checkins
+  FROM ranked_checkins
+  WHERE rank = 1
+),
+categorias_por_desafio AS (
+  SELECT
+    challenge_id,
+    STRING_AGG(DISTINCT category, ', ') AS categorias_distintas
+  FROM reports.checkins
+  GROUP BY challenge_id
+)
+
 SELECT
     c.challenge_id,
     c.challenge_name,
-    
-    COUNT(*) AS total_check_ins,
+
+    COUNT(*) AS total_check_ins_no_periodo,
 
     COUNT(*) FILTER (WHERE c.is_overdue) AS total_check_ins_em_atraso,
 
     COUNT(DISTINCT c.category) AS categorias_distintas_usadas,
+
+    cat.categorias_distintas,
 
     -- Dia da semana mais ativo (segunda, terça, etc)
     CASE MODE() WITHIN GROUP (ORDER BY EXTRACT(DOW FROM c.date))
@@ -26,25 +53,17 @@ SELECT
         2
     ) AS media_checkins_por_mes,
 
-    -- Usuário com mais check-ins
-    (
-        SELECT c2.username
-        FROM reports.checkins c2
-        WHERE c2.challenge_id = c.challenge_id
-        GROUP BY c2.username
-        ORDER BY COUNT(*) DESC
-        LIMIT 1
-    ) AS user_mais_ativo,
-
-    (
-        SELECT COUNT(*)
-        FROM reports.checkins c2
-        WHERE c2.challenge_id = c.challenge_id
-        GROUP BY c2.username
-        ORDER BY COUNT(*) DESC
-        LIMIT 1
-    ) AS total_user_mais_ativo
+    u.username AS usuario_mais_ativo,
+    u.total_checkins AS total_checkins_usuario_mais_ativo
 
 FROM reports.checkins c
-GROUP BY c.challenge_id, c.challenge_name
-ORDER BY total_check_ins DESC;
+LEFT JOIN user_mais_ativo u ON u.challenge_id = c.challenge_id
+LEFT JOIN categorias_por_desafio cat ON cat.challenge_id = c.challenge_id
+where
+    c.challenge_id in (4,5)
+GROUP BY
+    c.challenge_id,
+    c.challenge_name,
+    u.username,
+    u.total_checkins,
+    cat.categorias_distintas
