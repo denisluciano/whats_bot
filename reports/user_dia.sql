@@ -1,4 +1,3 @@
--- CREATE OR REPLACE VIEW reports.user_dia AS
 CREATE OR REPLACE VIEW reports.user_dia AS
 SELECT
     username,
@@ -8,7 +7,7 @@ SELECT
     group_id,
     (date AT TIME ZONE 'America/Sao_Paulo')::date AS date,
 
-    MIN(category) AS category, -- pode ser qualquer uma do dia
+    string_agg(category, ',') AS category, -- pode ser qualquer uma do dia
     MAX(is_overdue::int)::boolean AS is_overdue, -- se teve algum em atraso, conta como true
     count(*) as numero_categorias_distintas
 
