@@ -6,15 +6,10 @@ const { handleMessage } = require('./handlers/messageHandler');
 const { cronHandleMessage } = require('./handlers/cronHandler');
 
 const { connectToPostgreSQL } = require('./config/postgresConnection');
-const { sequelize } = require('./config/postgresConnection');
 require('./models/associations'); // Carrega as associações 
 
 
 connectToPostgreSQL();
-
-sequelize.sync({ alter: true })
-    .then(() => console.log('📦 Banco de dados sincronizado!'))
-    .catch(err => console.error('❌ Erro ao sincronizar o banco:', err));
 
 // Creating a new instance of the client
 const client = new Client({

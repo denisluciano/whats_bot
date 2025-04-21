@@ -7,6 +7,9 @@ const { Challenge, ChallengeCategory } = require('../models/associations');
 const { handleAddCategoryCommand, handleListCategoriesCommand  } = require('../controllers/categoryController');
 
 const handleMessage = async (client, message) => {
+
+    printMessage(message);
+
     const normalizedMessage = normalizeText(message.body);
 
     if (normalizedMessage.startsWith('id do grupo')) {
