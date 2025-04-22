@@ -65,3 +65,16 @@ npm install
 ```bash
 npm start
 ```
+
+## Migrations
+
+### 📦 Adicionar uma nova migration
+```bash
+npx sequelize-cli migration:generate --name nome-da-migration
+```
+
+### Rodar migrations
+
+```bash
+npx sequelize-cli db:migrate
+```
