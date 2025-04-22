@@ -2,7 +2,6 @@ const moment = require('moment-timezone');
 const { processCheckIn } = require('../controllers/checkinController');
 const { getRanking } = require('../controllers/rankingController');
 const { normalizeText } = require('../utils/textUtils');
-const { parseTimeframe, extractCategoryAndTimeframe } = require('../utils/dateUtils');
 const { Op } = require('sequelize');
 const { Challenge, ChallengeCategory } = require('../models/associations'); 
 const { handleAddCategoryCommand, handleListCategoriesCommand  } = require('../controllers/categoryController');
@@ -32,21 +31,51 @@ const handleMessage = async (client, message) => {
     }
 
     if (normalizedMessage.startsWith('ta pago')) {
-        const { category, timeframe, error } = extractCategoryAndTimeframe(normalizedMessage);
+        const [_, __, category, timeframe] = normalizedMessage.split(' ');
         const userId = message.author || message.from;
         const userName = message._data.notifyName;
 
-        if (error || !category) {
-            client.sendMessage(message.from, error || '❌ Categoria não informada.');
+        if (!category) {
+            client.sendMessage(message.from, `❌ Formato inválido de check-in. Exemplos válidos: *ta pago <categoria>*, *ta pago <categoria> 01/01/2025' ou 'ta pago <categoria> ontem*`);
             return;
         }
 
-        const { date, isOverdue, error: dateError } = parseTimeframe(timeframe);
-        if (dateError) {
-            client.sendMessage(message.from, dateError);
-            return;
-        }
+        // Define a data do check-in
+        let date = utcNow;
+        let isOverdue = false;
 
+        if (timeframe) {
+            if (timeframe === 'ontem') {
+                date = moment.tz('America/Sao_Paulo').subtract(1, 'day').startOf('day').utc();
+                isOverdue = true;
+            } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(timeframe)) {
+                const parsedDate = moment.tz(timeframe, 'DD/MM/YYYY', 'America/Sao_Paulo').startOf('day');
+                const today = moment.tz('America/Sao_Paulo').startOf('day');
+                const sevenDaysAgo = moment.tz('America/Sao_Paulo').subtract(7, 'days').startOf('day');
+        
+                if (!parsedDate.isValid()) {
+                    client.sendMessage(message.from, `❌ Data inválida fornecida no formato DD/MM/YYYY.`);
+                    return;
+                }
+        
+                if (parsedDate.isAfter(today)) {
+                    client.sendMessage(message.from, `❌ A data não pode ser no futuro.`);
+                    return;
+                }
+        
+                if (parsedDate.isBefore(sevenDaysAgo)) {
+                    client.sendMessage(message.from, `❌ A data não pode ser inferior a 7 dias passados.`);
+                    return;
+                }
+        
+                date = parsedDate.utc();
+                isOverdue = true;
+            } else {
+                client.sendMessage(message.from, `❌ Formato inválido de check-in. Exemplos válidos: *ta pago <categoria>*, *ta pago <categoria> 01/01/2025* ou *ta pago <categoria> ontem*`);
+                return;
+            }
+        }
+        
         await processCheckIn(client, message, userId, userName, challenge, category, date, isOverdue);
 
     } else if (normalizedMessage === '!ranking') {
@@ -58,48 +87,6 @@ const handleMessage = async (client, message) => {
 
     } else if (normalizedMessage === '!todascategorias') {
         await handleListCategoriesCommand(message, client);
-
-    } else if (normalizedMessage === 'recontar' && message.hasQuotedMsg) {
-
-        const ADMIN_NUMBER = '553198256660@c.us'; // Apenas este número pode adicionar categorias
-        const senderNumber = message.author || message.from;
-
-        if (!senderNumber.includes(ADMIN_NUMBER)) {
-            await client.sendMessage(message.from, '⚠️ Você não tem permissão para adicionar categorias.');
-            return;
-        }
-
-        const quotedMsg = await message.getQuotedMessage();
-        const userId = quotedMsg.author || quotedMsg.from;
-
-        const contactId = quotedMsg.author || quotedMsg.from;
-        const contact = await client.getContactById(contactId);
-        const userName = contact?.pushname || contact?.name || 'Usuário';
-
-        const normalizedQuoted = normalizeText(quotedMsg.body);
-
-        const { category, timeframe, error } = extractCategoryAndTimeframe(normalizedQuoted);
-
-        if (error || !category) {
-            client.sendMessage(message.from, error || '❌ Categoria não identificada na mensagem original.');
-            return;
-        }
-
-        console.log('📆 Timestamp da mensagem respondida:', quotedMsg.timestamp);
-
-        // Usa a data da mensagem original se não houver timeframe explícito
-        const referenceDate = moment.unix(quotedMsg.timestamp).tz('America/Sao_Paulo').startOf('day');
-
-        const { date, isOverdue, error: dateError } = parseTimeframe(timeframe);
-        const finalDate = timeframe ? date : referenceDate.utc();
-        const finalOverdue = timeframe ? isOverdue : false;
-
-        if (dateError) {
-            client.sendMessage(message.from, dateError);
-            return;
-        }
-
-        await processCheckIn(client, quotedMsg, userId, userName, challenge, category, finalDate, finalOverdue);
     }
 };
 
