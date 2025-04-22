@@ -71,7 +71,11 @@ const handleMessage = async (client, message) => {
 
         const quotedMsg = await message.getQuotedMessage();
         const userId = quotedMsg.author || quotedMsg.from;
-        const userName = quotedMsg._data?.notifyName || 'Usuário';
+
+        const contactId = quotedMsg.author || quotedMsg.from;
+        const contact = await client.getContactById(contactId);
+        const userName = contact?.pushname || contact?.name || 'Usuário';
+
         const normalizedQuoted = normalizeText(quotedMsg.body);
 
         const { category, timeframe, error } = extractCategoryAndTimeframe(normalizedQuoted);
