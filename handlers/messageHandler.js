@@ -62,7 +62,6 @@ const handleMessage = async (client, message) => {
     } else if (normalizedMessage === 'recontar' && message.hasQuotedMsg) {
 
         const ADMIN_NUMBER = '553198256660@c.us'; // Apenas este número pode adicionar categorias
-        
         const senderNumber = message.author || message.from;
 
         if (!senderNumber.includes(ADMIN_NUMBER)) {
@@ -82,15 +81,19 @@ const handleMessage = async (client, message) => {
             return;
         }
 
+        // Usa a data da mensagem original se não houver timeframe explícito
+        const referenceDate = moment.unix(quotedMsg.timestamp).tz('America/Sao_Paulo').startOf('day');
+
         const { date, isOverdue, error: dateError } = parseTimeframe(timeframe);
+        const finalDate = timeframe ? date : referenceDate.utc();
+        const finalOverdue = timeframe ? isOverdue : false;
+
         if (dateError) {
             client.sendMessage(message.from, dateError);
             return;
         }
 
-        await processCheckIn(client, quotedMsg, userId, userName, challenge, category, date, isOverdue);
-
-
+        await processCheckIn(client, quotedMsg, userId, userName, challenge, category, finalDate, finalOverdue);
     }
 };
 
