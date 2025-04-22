@@ -85,6 +85,8 @@ const handleMessage = async (client, message) => {
             return;
         }
 
+        console.log('📆 Timestamp da mensagem respondida:', quotedMsg.timestamp);
+
         // Usa a data da mensagem original se não houver timeframe explícito
         const referenceDate = moment.unix(quotedMsg.timestamp).tz('America/Sao_Paulo').startOf('day');
 
