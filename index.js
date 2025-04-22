@@ -8,6 +8,8 @@ const { cronHandleMessage } = require('./handlers/cronHandler');
 const { connectToPostgreSQL } = require('./config/postgresConnection');
 require('./models/associations'); // Carrega as associações 
 
+const { limparSessao } = require('./handlers/sessionCleaner');
+
 
 connectToPostgreSQL();
 
@@ -71,6 +73,16 @@ client.on('ready', () => {
     }, {
         // Define o fuso horário como America/Sao_Paulo
         timezone: "America/Sao_Paulo"
+    });
+
+    // Limpeza da sessão
+    // A limpeza da sessão é feita diariamente às 3h da manhã
+    // Isso garante que os arquivos temporários sejam removidos regularmente
+    // e não ocupem espaço desnecessário no disco.
+    cron.schedule('0 3 * * *', () => {
+        limparSessao();
+    }, {
+        timezone: 'America/Sao_Paulo'
     });
 
 });
