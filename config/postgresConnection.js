@@ -8,12 +8,13 @@ const sequelize = new Sequelize(process.env.POSTGRES_URI, {
     define: {
         timestamps: false,
     },
-    dialectOptions: {
-        ssl: {
-          require: true, // This will help you. But you will see nwe error
-          rejectUnauthorized: false // This line will fix new error
-        }
-    }
+    // dialectOptions: {
+    //     ssl: {
+    //       require: true, // This will help you. But you will see nwe error
+    //       rejectUnauthorized: false // This line will fix new error
+    //     }
+    // }
+    dialectOptions: { ssl: false }
 });
 
 const connectToPostgreSQL = async () => {
