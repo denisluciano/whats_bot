@@ -3,14 +3,15 @@ const { processCheckIn } = require('../controllers/checkinController');
 const { getRanking } = require('../controllers/rankingController');
 const { normalizeText } = require('../utils/textUtils');
 const { Op } = require('sequelize');
-const { Challenge, ChallengeCategory } = require('../models/associations'); 
-const { handleAddCategoryCommand, handleListCategoriesCommand  } = require('../controllers/categoryController');
+const { Challenge, ChallengeCategory, User } = require('../models/associations');
+const { handleAddCategoryCommand, handleListCategoriesCommand } = require('../controllers/categoryController');
 
 const handleMessage = async (client, message) => {
     const normalizedMessage = normalizeText(message.body);
 
     if (normalizedMessage.startsWith('id do grupo')) {
         client.sendMessage(message.from, `ID do Grupo: ${message.from}`);
+        return;
     }
 
     const groupId = message.from;
@@ -23,7 +24,7 @@ const handleMessage = async (client, message) => {
             startDate: { [Op.lte]: utcNow.toDate() },
             endDate: { [Op.gte]: utcNow.toDate() }
         },
-        include: [{ model: ChallengeCategory }] 
+        include: [{ model: ChallengeCategory, as: 'categories' }]
     });
 
     if (!challenge) {
@@ -32,11 +33,16 @@ const handleMessage = async (client, message) => {
 
     if (normalizedMessage.startsWith('ta pago')) {
         const [_, __, category, timeframe] = normalizedMessage.split(' ');
-        const userId = message.author || message.from;
+        const whatsappId = message.author || message.from;
         const userName = message._data.notifyName;
 
+        const [user] = await User.findOrCreate({
+            where: { whatsappId },
+            defaults: { userName, creationTime: utcNow.toDate() }
+        });
+
         if (!category) {
-            client.sendMessage(message.from, `❌ Formato inválido de check-in. Exemplos válidos: *ta pago <categoria>*, *ta pago <categoria> 01/01/2025' ou 'ta pago <categoria> ontem*`);
+            client.sendMessage(message.from, `❌ Formato inválido de check-in. Exemplos válidos: *ta pago <categoria>*, *ta pago <categoria> 01/01/2025* ou *ta pago <categoria> ontem*`);
             return;
         }
 
@@ -75,8 +81,8 @@ const handleMessage = async (client, message) => {
                 return;
             }
         }
-        
-        await processCheckIn(client, message, userId, userName, challenge, category, date, isOverdue);
+
+        await processCheckIn(client, message, user.id, userName, challenge, category, date, isOverdue);
 
     } else if (normalizedMessage === '!ranking') {
         const rankingMessage = await getRanking(challenge);

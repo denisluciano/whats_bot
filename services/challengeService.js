@@ -1,5 +1,5 @@
 const Challenge = require('../models/challenge');
-const ChallengeCategory = require('../models/ChallengeCategory');
+const ChallengeCategory = require('../models/challengeCategory');
 const moment = require('moment-timezone');
 const { Op } = require('sequelize');
 

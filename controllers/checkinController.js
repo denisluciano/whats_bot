@@ -19,16 +19,6 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
         return;
     }
 
-    let user = await User.findOne({ where: { userId } });
-
-    if (!user) {
-        user = await User.create({ 
-            userId: userId, 
-            userName: userName,
-            creationTime: moment.utc().toDate() 
-        });
-    }
-
     const alreadyCheckedIn = await Checkin.findOne({
         where: {
             userId,
