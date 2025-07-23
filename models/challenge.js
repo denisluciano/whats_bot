@@ -1,3 +1,4 @@
+const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/postgresConnection');
 
 // Defina o modelo primeiro, sem associar

@@ -1,5 +1,7 @@
+const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/postgresConnection');
 const User = require('./user');
+const Challenge = require('./challenge');
 
 const Checkin = sequelize.define('Checkin', {
     userId: {
