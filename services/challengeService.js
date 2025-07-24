@@ -12,7 +12,7 @@ async function getChallengeByGroup(groupId) {
             startDate: { [Op.lte]: moment.utc().toDate() },
             endDate: { [Op.gte]: moment.utc().toDate() }
         },
-        include: ChallengeCategory // Inclui as categorias associadas ao desafio
+        include: [{ model: ChallengeCategory, as: 'categories' }] // Inclui as categorias associadas ao desafio
     });
 }
 
@@ -34,11 +34,11 @@ async function addCategoryToChallenge(challengeId, category) {
 async function getAllCategoriesByGroup(groupId) {
     const challenge = await getChallengeByGroup(groupId);
 
-    if (!challenge || !challenge.ChallengeCategories || challenge.ChallengeCategories.length === 0) {
+    if (!challenge || !challenge.categories || challenge.categories.length === 0) {
         return null;
     }
 
-    return challenge.ChallengeCategories.map(cat => cat.category);
+    return challenge.categories.map(cat => cat.category);
 }
 
 module.exports = { getChallengeByGroup, addCategoryToChallenge, getAllCategoriesByGroup  };
