@@ -8,7 +8,7 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
     const endOfDay = dateBRT.clone().endOf('day').utc().toDate();
 
     // Verifica se a categoria é válida
-    const validCategories = challenge.ChallengeCategories?.map(cc => cc.category) || [];
+    const validCategories = challenge.categories?.map(cc => cc.category) || [];
     
     if (!validCategories.includes(category)) {
         client.sendMessage(
