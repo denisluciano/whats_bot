@@ -1,6 +1,5 @@
 const moment = require('moment-timezone');
 const Checkin = require('../models/checkin');
-const User = require('../models/user');
 const { Op } = require('sequelize');
 
 const processCheckIn = async (client, message, userId, userName, challenge, category, dateUTC, isOverdue) => {
@@ -9,7 +8,7 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
     const endOfDay = dateBRT.clone().endOf('day').utc().toDate();
 
     // Verifica se a categoria é válida
-    const validCategories = challenge.ChallengeCategories?.map(cc => cc.category) || [];
+    const validCategories = challenge.categories?.map(cc => cc.category) || [];
     
     if (!validCategories.includes(category)) {
         client.sendMessage(
@@ -17,16 +16,6 @@ const processCheckIn = async (client, message, userId, userName, challenge, cate
             `A categoria *"${category}"* não é aceita para a atividade *${challenge.name}*. Por favor, use uma das seguintes categorias: *${validCategories.join(', ')}*.`
         );
         return;
-    }
-
-    let user = await User.findOne({ where: { userId } });
-
-    if (!user) {
-        user = await User.create({ 
-            userId: userId, 
-            userName: userName,
-            creationTime: moment.utc().toDate() 
-        });
     }
 
     const alreadyCheckedIn = await Checkin.findOne({

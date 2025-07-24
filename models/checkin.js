@@ -1,18 +1,21 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/postgresConnection');
 const User = require('./user');
+const Challenge = require('./challenge');
 
 const Checkin = sequelize.define('Checkin', {
     userId: {
         type: DataTypes.STRING,
+        allowNull: false,
         references: {
             model: User,
-            key: 'userId'
+            key: 'id'
         }
     },
     challengeId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: { model: Challenge, key: 'id' }
     },
     category: {
         type: DataTypes.STRING,

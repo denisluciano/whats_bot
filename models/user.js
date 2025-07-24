@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/postgresConnection');
 
 const User = sequelize.define('User', {
-    userId: {
+    whatsAppId: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true

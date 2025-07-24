@@ -1,20 +1,12 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize(process.env.POSTGRES_URI, {
-    dialect: 'postgres',
-    logging: false,
-    timezone: 'UTC',
-    define: {
-        timestamps: false,
-    },
-    dialectOptions: {
-        ssl: {
-          require: true, // This will help you. But you will see nwe error
-          rejectUnauthorized: false // This line will fix new error
-        }
-    }
-});
+// Centralized database configuration
+const dbConfig = require('./config')[process.env.NODE_ENV || 'development'];
+
+// Use connection URI from environment variable combined with shared options
+const sequelize = new Sequelize(process.env[dbConfig.use_env_variable], dbConfig);
+
 
 const connectToPostgreSQL = async () => {
     try {
