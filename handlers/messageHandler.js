@@ -32,11 +32,11 @@ const handleMessage = async (client, message) => {
 
     if (normalizedMessage.startsWith('ta pago')) {
         const [_, __, category, timeframe] = normalizedMessage.split(' ');
-        const whatsappId = message.author || message.from;
+        const whatsAppId = message.author || message.from;
         const userName = message._data.notifyName;
 
         const [user] = await User.findOrCreate({
-            where: { whatsappId },
+            where: { whatsAppId },
             defaults: { userName, creationTime: utcNow.toDate() }
         });
 
