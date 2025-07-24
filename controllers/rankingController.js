@@ -44,7 +44,7 @@ const getRanking = async (challenge) => {
 
     // Buscar os nomes dos usuários
     for (const entry of rankingAnual) {
-        const user = await User.findOne({ where: { userId: entry.userId } });
+        const user = await User.findOne({ where: { id: entry.userId } });
         entry.userName = user ? user.userName : 'Usuário desconhecido';
     }
 

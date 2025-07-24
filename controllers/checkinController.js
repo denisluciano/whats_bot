@@ -1,6 +1,5 @@
 const moment = require('moment-timezone');
 const Checkin = require('../models/checkin');
-const User = require('../models/user');
 const { Op } = require('sequelize');
 
 const processCheckIn = async (client, message, userId, userName, challenge, category, dateUTC, isOverdue) => {
