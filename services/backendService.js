@@ -1,7 +1,5 @@
 const moment = require('moment-timezone');
 const api = require('./apiClient');
-// Ajuste o prefixo conforme seu back-end. Se seu back-end NÃO usa prefixo, deixe vazio ('').
-const API_PREFIX = process.env.BOT_API_PREFIX || '';
 
 // Utilitários de formatação
 function extractMessage(data, fallback) {
@@ -72,7 +70,7 @@ function mapCheckinError(errData) {
 
 async function listChallenges() {
   try {
-    const res = await api.get(`${API_PREFIX}/desafios`);
+    const res = await api.get(`/desafios`);
     const challenges = Array.isArray(res.data) ? res.data : [];
     return { success: true, challenges };
   } catch (err) {
@@ -85,7 +83,7 @@ async function registerCheckin({ groupId, senderWhatsAppId, userName, category, 
     let res;
     if (dateYMD) {
       // POST /checkins/date com date em YYYY-MM-DD
-      res = await api.post(`${API_PREFIX}/checkins/date`, {
+      res = await api.post(`/checkins/date`, {
         groupId,
         senderWhatsAppId,
         userName,
@@ -96,7 +94,7 @@ async function registerCheckin({ groupId, senderWhatsAppId, userName, category, 
       // POST /checkins (opcionalmente com timeframe)
       const body = { groupId, senderWhatsAppId, userName, category };
       if (typeof timeframe === 'string' && timeframe.length) body.timeframe = timeframe;
-      res = await api.post(`${API_PREFIX}/checkins`, body);
+      res = await api.post(`/checkins`, body);
     }
     return {
       success: true,
@@ -115,7 +113,7 @@ async function registerCheckin({ groupId, senderWhatsAppId, userName, category, 
 
 async function getRanking({ groupId }) {
   try {
-    const res = await api.get(`${API_PREFIX}/ranking`, { params: { groupId } });
+    const res = await api.get(`/ranking`, { params: { groupId } });
     return {
       success: true,
       message: formatRankingMessage(res.data),
@@ -133,7 +131,7 @@ async function getRanking({ groupId }) {
 
 async function addCategory({ groupId, categoryName, senderWhatsAppId }) {
   try {
-    const res = await api.post(`${API_PREFIX}/categorias`, { groupId, categoryName, senderWhatsAppId });
+    const res = await api.post(`/categorias`, { groupId, categoryName, senderWhatsAppId });
     const name = res?.data?.category?.name || categoryName;
     return {
       success: true,
@@ -155,7 +153,7 @@ async function addCategory({ groupId, categoryName, senderWhatsAppId }) {
 
 async function listCategories({ groupId }) {
   try {
-    const res = await api.get(`${API_PREFIX}/categorias`, { params: { groupId } });
+    const res = await api.get(`/categorias`, { params: { groupId } });
     const categories = Array.isArray(res?.data?.categories) ? res.data.categories : [];
     if (!res?.data?.challenge) {
       return { success: true, message: '🚫 Nenhum desafio encontrado para este grupo.', data: res.data };

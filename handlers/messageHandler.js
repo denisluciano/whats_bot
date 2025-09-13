@@ -1,7 +1,7 @@
 const moment = require('moment-timezone');
 const { normalizeText } = require('../utils/textUtils');
 const { registerCheckin, getRanking: getRankingFromBackend, addCategory: addCategoryBackend, listCategories } = require('../services/backendService');
-const ADMIN_NUMBER = process.env.ADMIN_NUMBER || '553198256660@c.us';
+const LIMIT_DAYS_RETROACTIVE = process.env.LIMIT_DAYS_RETROACTIVE || 7;
 
 const handleMessage = async (client, message) => {   
     const normalizedMessage = normalizeText(message.body);
@@ -34,7 +34,7 @@ const handleMessage = async (client, message) => {
             } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(timeframe)) {
                 const parsedDate = moment.tz(timeframe, 'DD/MM/YYYY', 'America/Sao_Paulo').startOf('day');
                 const today = moment.tz('America/Sao_Paulo').startOf('day');
-                const sevenDaysAgo = moment.tz('America/Sao_Paulo').subtract(7, 'days').startOf('day');
+                const daysAgo = moment.tz('America/Sao_Paulo').subtract(LIMIT_DAYS_RETROACTIVE, 'days').startOf('day');
         
                 if (!parsedDate.isValid()) {
                     client.sendMessage(message.from, `❌ Data inválida fornecida no formato DD/MM/YYYY.`);
@@ -46,8 +46,8 @@ const handleMessage = async (client, message) => {
                     return;
                 }
         
-                if (parsedDate.isBefore(sevenDaysAgo)) {
-                    client.sendMessage(message.from, `❌ A data não pode ser inferior a 7 dias passados.`);
+                if (parsedDate.isBefore(daysAgo)) {
+                    client.sendMessage(message.from, `❌ A data não pode ser inferior a ${LIMIT_DAYS_RETROACTIVE} dias passados.`);
                     return;
                 }
         
@@ -69,6 +69,9 @@ const handleMessage = async (client, message) => {
                 dateISO: moment.utc(date).toISOString(),
                 isOverdue,
             });
+
+            
+
             await client.sendMessage(message.from, response.message);
         } catch (err) {
             await client.sendMessage(message.from, '❌ Erro ao comunicar com o servidor. Tente novamente.');
