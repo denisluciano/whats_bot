@@ -1,10 +1,7 @@
 const moment = require('moment-timezone');
-const { processCheckIn } = require('../controllers/checkinController');
-const { getRanking } = require('../controllers/rankingController');
 const { normalizeText } = require('../utils/textUtils');
-const { Op } = require('sequelize');
-const { Challenge, ChallengeCategory, User } = require('../models/associations');
-const { handleAddCategoryCommand, handleListCategoriesCommand } = require('../controllers/categoryController');
+const { registerCheckin, getRanking: getRankingFromBackend, addCategory: addCategoryBackend, listCategories } = require('../services/backendService');
+const ADMIN_NUMBER = process.env.ADMIN_NUMBER || '553198256660@c.us';
 
 const handleMessage = async (client, message) => {   
     const normalizedMessage = normalizeText(message.body);
@@ -14,31 +11,12 @@ const handleMessage = async (client, message) => {
     }
 
     const groupId = message.from;
+    const whatsAppId = message.author || message.from;
+    const userName = message._data.notifyName; // Preciso, pois se for primeiro check-in, o nome do usuário não é salvo
     let utcNow = moment.utc();
-
-    // Busca o desafio ativo e inclui as categorias associadas
-    const challenge = await Challenge.findOne({
-        where: {
-            groupId: groupId,
-            startDate: { [Op.lte]: utcNow.toDate() },
-            endDate: { [Op.gte]: utcNow.toDate() }
-        },
-        include: [{ model: ChallengeCategory, as: 'categories' }]
-    });
-
-    if (!challenge) {
-        return; // Grupo não possui um desafio ativo
-    }
 
     if (normalizedMessage.startsWith('ta pago')) {
         const [_, __, category, timeframe] = normalizedMessage.split(' ');
-        const whatsAppId = message.author || message.from;
-        const userName = message._data.notifyName;
-
-        const [user] = await User.findOrCreate({
-            where: { whatsAppId },
-            defaults: { userName, creationTime: utcNow.toDate() }
-        });
 
         if (!category) {
             client.sendMessage(message.from, `❌ Formato inválido de check-in. Exemplos válidos: *ta pago <categoria>*, *ta pago <categoria> 01/01/2025* ou *ta pago <categoria> ontem*`);
@@ -81,17 +59,58 @@ const handleMessage = async (client, message) => {
             }
         }
 
-        await processCheckIn(client, message, user.id, userName, challenge, category, date, isOverdue);
+        // Chamada ao backend para registrar check-in
+        try {
+            const response = await registerCheckin({
+                groupId,
+                whatsAppId,
+                userName,
+                category,
+                dateISO: moment.utc(date).toISOString(),
+                isOverdue,
+            });
+            await client.sendMessage(message.from, response.message);
+        } catch (err) {
+            await client.sendMessage(message.from, '❌ Erro ao comunicar com o servidor. Tente novamente.');
+        }
 
     } else if (normalizedMessage === '!ranking') {
-        const rankingMessage = await getRanking(challenge);
-        client.sendMessage(message.from, rankingMessage);
+        // Faz request para o backend pedindo o ranking
+        try {
+            const response = await getRankingFromBackend({ groupId });
+            await client.sendMessage(message.from, response.message);
+        } catch (err) {
+            await client.sendMessage(message.from, '❌ Erro ao buscar o ranking.');
+        }
 
     } else if (normalizedMessage.startsWith('!addcategoria')) {
-        await handleAddCategoryCommand(message, client);
+        // Faz request para o backend pedindo a adição de uma categoria
+        const args = message.body.trim().split(/\s+/);
+        if (args.length < 2) {
+            await client.sendMessage(message.from, '⚠️ Uso correto: *!addcategoria <categoria>*');
+            return;
+        }
+        const senderNumber = message.author || message.from;
+        if (!String(senderNumber).includes(ADMIN_NUMBER)) {
+            await client.sendMessage(message.from, '⚠️ Você não tem permissão para adicionar categorias.');
+            return;
+        }
+        const categoryName = args.slice(1).join(' ');
+        try {
+            const response = await addCategoryBackend({ groupId, categoryName });
+            await client.sendMessage(message.from, response.message);
+        } catch (err) {
+            await client.sendMessage(message.from, `❌ Erro ao adicionar a categoria "${categoryName}".`);
+        }
 
     } else if (normalizedMessage === '!todascategorias') {
-        await handleListCategoriesCommand(message, client);
+        // Faz request para o backend pedindo a listagem de todas as categorias
+        try {
+            const response = await listCategories({ groupId });
+            await client.sendMessage(message.from, response.message);
+        } catch (err) {
+            await client.sendMessage(message.from, '❌ Erro ao listar categorias.');
+        }
     }
 };
 

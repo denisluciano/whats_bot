@@ -60,7 +60,23 @@ cd whats_bot
 npm install
 ```
 
-### 2. executar projeto
+### 3. configurar variáveis de ambiente (.env)
+
+Crie um arquivo `.env` na raiz do projeto (baseie-se em `.env.exemple`) e configure:
+
+- BOT_API_BASE: base URL do seu back-end. Ex.: http://localhost:3000
+- BOT_API_PREFIX: prefixo das rotas do bot (opcional, default: /bot). Ex.: /bot ou /api/bot
+- BOT_TOKEN: token usado no header Authorization: Bearer <token> em todas as requisições ao back-end (se aplicável)
+- ADMIN_NUMBER: número (ID) do WhatsApp autorizado a usar !addcategoria. Ex.: 553198256660@c.us
+
+O cliente Axios em `services/apiClient.js` usa essas variáveis para montar as chamadas:
+
+- POST {BOT_API_BASE}{BOT_API_PREFIX}/checkins body: { groupId, whatsAppId, userName, category, date, isOverdue }
+- GET  {BOT_API_BASE}{BOT_API_PREFIX}/ranking?groupId=...
+- POST {BOT_API_BASE}{BOT_API_PREFIX}/categories body: { groupId, category }
+- GET  {BOT_API_BASE}{BOT_API_PREFIX}/categories?groupId=...
+
+### 4. executar projeto
 
 ```bash
 npm start
