@@ -6,7 +6,7 @@ const LIMIT_DAYS_RETROACTIVE = process.env.LIMIT_DAYS_RETROACTIVE || 7;
 const handleMessage = async (client, message) => {   
     const normalizedMessage = normalizeText(message.body);
 
-    if (normalizedMessage.startsWith('id do grupo')) {
+    if (normalizedMessage.startsWith('!id')) {
         client.sendMessage(message.from, `ID do Grupo: ${message.from}`);
     }
 
