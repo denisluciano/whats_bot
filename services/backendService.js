@@ -42,27 +42,42 @@ function mapCheckinSuccess(resData) {
   return `🥳 *Parabéns* ${userName}! Check-in registrado para atividade *${challengeName}* na categoria *${catName}* na data de *${dateStr}*!`;
 }
 
-function mapCheckinError(errData) {
+function mapCheckinError(errData, context = {}) {
   const error = errData?.error;
   const valid = Array.isArray(errData?.validCategories) ? errData.validCategories : undefined;
+
+  const attemptedCategory = context.category
+    || errData?.category?.name
+    || errData?.category?.category
+    || errData?.attemptedCategory
+    || 'categoria';
+  const challengeName = errData?.challenge?.name || 'desafio';
+  const userName = context.userName || errData?.user?.userName || 'Você';
+  const dateRef = errData?.date || errData?.checkin?.date || context.date;
+  const dateStr = dateRef
+    ? moment(dateRef).tz('America/Sao_Paulo').format('DD/MM/YYYY')
+    : moment().tz('America/Sao_Paulo').format('DD/MM/YYYY');
+  const daysLimit = process.env.LIMIT_DAYS_RETROACTIVE || 7;
+
   switch (error) {
     case 'NO_ACTIVE_CHALLENGE':
-      return '⚠️ Nenhum desafio encontrado para este grupo.';
+      return '🚫 Nenhum desafio encontrado para este grupo.';
     case 'INVALID_CATEGORY':
       return valid && valid.length
-        ? `A categoria informada não é aceita para esta atividade. Use uma das seguintes: *${valid.join(', ')}*.`
-        : 'A categoria informada não é aceita para esta atividade.';
+        ? `A categoria *"${attemptedCategory}"* não é aceita para a atividade *${challengeName}*. Por favor, use uma das seguintes categorias: *${valid.join(', ')}*.`
+        : `A categoria *"${attemptedCategory}"* não é aceita para a atividade *${challengeName}*.`;
     case 'INVALID_DATE_FORMAT':
-      return '❌ Data inválida fornecida.';
+      return '❌ Data inválida fornecida no formato DD/MM/YYYY.';
     case 'DATE_IN_FUTURE':
       return '❌ A data não pode ser no futuro.';
     case 'DATE_TOO_OLD':
+      return `❌ A data não pode ser inferior a ${daysLimit} dias passados.`;
     case 'DATE_OUT_OF_CHALLENGE_RANGE':
-      return '❌ A data informada está fora do período permitido.';
+      return '❌ A data informada está fora do período do desafio.';
     case 'INVALID_TIMEFRAME':
-      return '❌ Período inválido informado.';
+      return '❌ Formato inválido de check-in. Exemplos válidos: *ta pago <categoria>*, *ta pago <categoria> 01/01/2025* ou *ta pago <categoria> ontem*';
     case 'ALREADY_CHECKED_IN':
-      return '⚠️ Você já fez um check-in para esta data.';
+      return `⚠️ ${userName}, você *já fez* um check-in para atividade *${challengeName}* na categoria *${attemptedCategory}* em *${dateStr}*.`;
     default:
       return extractMessage(errData, '❌ Não foi possível registrar o check-in. Tente novamente mais tarde.');
   }
@@ -98,7 +113,7 @@ async function registerCheckin({ groupId, senderWhatsAppId, userName, category, 
     const backendMsg = err?.response?.data;
     return {
       success: false,
-      message: mapCheckinError(backendMsg),
+      message: mapCheckinError(backendMsg, { userName, category, date }),
       data: backendMsg,
     };
   }
@@ -128,14 +143,19 @@ async function addCategory({ groupId, categoryName, senderWhatsAppId }) {
     const name = res?.data?.category?.name || categoryName;
     return {
       success: true,
-      message: `✅ Categoria "${name}" adicionada ao desafio com sucesso!`,
+      message: `✅ Categoria *"${name}"* adicionada ao desafio com sucesso!`,
       data: res.data,
     };
   } catch (err) {
     const backendMsg = err?.response?.data;
-    const msg = backendMsg?.error === 'CATEGORY_ALREADY_EXISTS'
-      ? '⚠️ A categoria informada já existe neste desafio.'
-      : extractMessage(backendMsg, `❌ Não foi possível adicionar a categoria "${categoryName}".`);
+    let msg;
+    if (backendMsg?.error === 'CATEGORY_ALREADY_EXISTS') {
+      msg = `⚠️ A categoria *"${categoryName}"* já existe neste desafio.`;
+    } else if (backendMsg?.error === 'NO_ACTIVE_CHALLENGE') {
+      msg = '⚠️ Nenhum desafio encontrado para este grupo.';
+    } else {
+      msg = extractMessage(backendMsg, `❌ Não foi possível adicionar a categoria "${categoryName}".`);
+    }
     return {
       success: false,
       message: msg,

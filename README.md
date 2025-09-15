@@ -67,7 +67,6 @@ Crie um arquivo `.env` na raiz do projeto (baseie-se em `.env.exemple`) e config
 - BOT_API_BASE: base URL do seu back-end. Ex.: http://localhost:3000
 - BOT_API_PREFIX: prefixo das rotas do bot (opcional, default: /bot). Ex.: /bot ou /api/bot
 - BOT_TOKEN: token usado no header Authorization: Bearer <token> em todas as requisições ao back-end (se aplicável)
-- ADMIN_NUMBER: número (ID) do WhatsApp autorizado a usar !addcategoria. Ex.: 553198256660@c.us
 
 O cliente Axios em `services/apiClient.js` usa essas variáveis para montar as chamadas:
 

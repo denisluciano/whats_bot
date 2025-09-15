@@ -88,14 +88,9 @@ const handleMessage = async (client, message) => {
             await client.sendMessage(message.from, '⚠️ Uso correto: *!addcategoria <categoria>*');
             return;
         }
-        const senderNumber = message.author || message.from;
-        if (!String(senderNumber).includes(ADMIN_NUMBER)) {
-            await client.sendMessage(message.from, '⚠️ Você não tem permissão para adicionar categorias.');
-            return;
-        }
         const categoryName = args.slice(1).join(' ');
         try {
-            const response = await addCategoryBackend({ groupId, categoryName });
+            const response = await addCategoryBackend({ groupId, categoryName, senderWhatsAppId });
             await client.sendMessage(message.from, response.message);
         } catch (err) {
             await client.sendMessage(message.from, `❌ Erro ao adicionar a categoria "${categoryName}".`);
