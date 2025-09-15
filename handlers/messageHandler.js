@@ -11,7 +11,7 @@ const handleMessage = async (client, message) => {
     }
 
     const groupId = message.from;
-    const whatsAppId = message.author || message.from;
+    const senderWhatsAppId = message.author || message.from;
     const userName = message._data.notifyName; // Preciso, pois se for primeiro check-in, o nome do usuário não é salvo
     let utcNow = moment.utc();
 
@@ -25,12 +25,10 @@ const handleMessage = async (client, message) => {
 
         // Define a data do check-in
         let date = utcNow;
-        let isOverdue = false;
 
         if (timeframe) {
             if (timeframe === 'ontem') {
                 date = moment.tz('America/Sao_Paulo').subtract(1, 'day').startOf('day').utc();
-                isOverdue = true;
             } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(timeframe)) {
                 const parsedDate = moment.tz(timeframe, 'DD/MM/YYYY', 'America/Sao_Paulo').startOf('day');
                 const today = moment.tz('America/Sao_Paulo').startOf('day');
@@ -52,7 +50,6 @@ const handleMessage = async (client, message) => {
                 }
         
                 date = parsedDate.utc();
-                isOverdue = true;
             } else {
                 client.sendMessage(message.from, `❌ Formato inválido de check-in. Exemplos válidos: *ta pago <categoria>*, *ta pago <categoria> 01/01/2025* ou *ta pago <categoria> ontem*`);
                 return;
@@ -63,16 +60,14 @@ const handleMessage = async (client, message) => {
         try {
             const response = await registerCheckin({
                 groupId,
-                whatsAppId,
+                senderWhatsAppId,
                 userName,
                 category,
-                dateISO: moment.utc(date).toISOString(),
-                isOverdue,
+                date: moment.utc(date).toISOString()
             });
 
-            
-
             await client.sendMessage(message.from, response.message);
+
         } catch (err) {
             await client.sendMessage(message.from, '❌ Erro ao comunicar com o servidor. Tente novamente.');
         }

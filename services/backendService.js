@@ -78,24 +78,17 @@ async function listChallenges() {
   }
 }
 
-async function registerCheckin({ groupId, senderWhatsAppId, userName, category, timeframe, dateYMD }) {
+async function registerCheckin({ groupId, senderWhatsAppId, userName, category, date }) {
+  
   try {
-    let res;
-    if (dateYMD) {
-      // POST /checkins/date com date em YYYY-MM-DD
-      res = await api.post(`/checkins/date`, {
-        groupId,
-        senderWhatsAppId,
-        userName,
-        category,
-        date: dateYMD,
-      });
-    } else {
-      // POST /checkins (opcionalmente com timeframe)
-      const body = { groupId, senderWhatsAppId, userName, category };
-      if (typeof timeframe === 'string' && timeframe.length) body.timeframe = timeframe;
-      res = await api.post(`/checkins`, body);
-    }
+    const res = await api.post(`/checkins/date`, {
+      groupId,
+      senderWhatsAppId,
+      userName,
+      category,
+      date
+    });
+    
     return {
       success: true,
       message: mapCheckinSuccess(res.data),
