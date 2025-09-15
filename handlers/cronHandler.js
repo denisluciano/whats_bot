@@ -1,22 +1,19 @@
 const moment = require('moment-timezone');
-const { getRanking } = require('../controllers/rankingController');
-const Challenge = require('../models/challenge');
-const { Op } = require('sequelize');
+const { getRanking, listChallenges } = require('../services/backendService');
 
 const cronHandleMessage = async (client, command) => {
     // Pega a data UTC atual
     let utcNow = moment.utc();
 
-    // Encontrar os desafios ativos
-    const challenges = await Challenge.findAll({
-        where: {
-            startDate: {
-                [Op.lte]: utcNow.toDate(), // Desafios que começaram antes ou no momento atual
-            },
-            endDate: {
-                [Op.gte]: utcNow.toDate(), // Desafios que terminam após ou no momento atual
-            },
-        },
+    // Buscar desafios via back-end e filtrar os ativos
+    const { success, challenges: allChallenges } = await listChallenges();
+    if (!success || !allChallenges) {
+        return;
+    }
+    const challenges = allChallenges.filter((c) => {
+        const start = moment.utc(c.startDate);
+        const end = moment.utc(c.endDate);
+        return start.isSameOrBefore(utcNow) && end.isSameOrAfter(utcNow);
     });
 
     if (!challenges || challenges.length === 0) {
@@ -27,8 +24,8 @@ const cronHandleMessage = async (client, command) => {
         // Itera sobre os desafios encontrados
         for (const challenge of challenges) {
             try {
-                // Obtém o ranking para o desafio específico
-                const rankingMessage = await getRanking(challenge);
+                // Obtém o ranking do back-end para o grupo do desafio
+                const { message: rankingMessage } = await getRanking({ groupId: challenge.groupId });
 
                 // Envia a mensagem para o grupo associado ao desafio
                 if (rankingMessage) {

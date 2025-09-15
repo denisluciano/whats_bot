@@ -1,3 +1,4 @@
+require('dotenv').config();
 const qrcode = require("qrcode");
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const cron = require('node-cron');
@@ -5,11 +6,6 @@ const cron = require('node-cron');
 const { handleMessage } = require('./handlers/messageHandler');
 const { cronHandleMessage } = require('./handlers/cronHandler');
 
-const { connectToPostgreSQL } = require('./config/postgresConnection');
-require('./models/associations'); // Carrega as associações 
-
-
-connectToPostgreSQL();
 
 // Creating a new instance of the client
 const client = new Client({
