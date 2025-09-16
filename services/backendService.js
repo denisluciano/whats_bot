@@ -37,8 +37,8 @@ function mapCheckinSuccess(resData) {
   const challengeName = resData?.challenge?.name || 'Atividade';
   const catName = resData?.category?.name || resData?.category?.category || 'categoria';
   const dateStr = resData?.checkin?.date
-    ? moment(resData.checkin.date).tz('America/Sao_Paulo').format('DD/MM/YYYY')
-    : moment().tz('America/Sao_Paulo').format('DD/MM/YYYY');
+    ? moment(resData.checkin.date).format('DD/MM/YYYY')
+    : '';
   return `🥳 *Parabéns* ${userName}! Check-in registrado para atividade *${challengeName}* na categoria *${catName}* na data de *${dateStr}*!`;
 }
 
@@ -55,8 +55,8 @@ function mapCheckinError(errData, context = {}) {
   const userName = context.userName || errData?.user?.userName || 'Você';
   const dateRef = errData?.date || errData?.checkin?.date || context.date;
   const dateStr = dateRef
-    ? moment(dateRef).tz('America/Sao_Paulo').format('DD/MM/YYYY')
-    : moment().tz('America/Sao_Paulo').format('DD/MM/YYYY');
+    ? moment(dateRef).format('DD/MM/YYYY')
+    : '';
   const daysLimit = process.env.LIMIT_DAYS_RETROACTIVE || 7;
 
   switch (error) {
