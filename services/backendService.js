@@ -185,10 +185,82 @@ async function listCategories({ groupId }) {
   }
 }
 
+/**
+ * Obtém o desafio ativo para um grupo com base na data de referência (UTC)
+ * @param {{ groupId: string, referenceDateUtc?: string|Date }} params
+ * @returns {Promise<{ success: boolean, challenge?: any, message?: string }>}
+ */
+async function getActiveChallengeForGroup({ groupId, referenceDateUtc }) {
+  try {
+    const { success, challenges } = await listChallenges();
+    if (!success) {
+      return { success: false, message: '❌ Não foi possível buscar os desafios.' };
+    }
+    const now = referenceDateUtc ? moment.utc(referenceDateUtc) : moment.utc();
+    const activeForGroup = (challenges || []).filter((c) => {
+      if (!c || c.groupId !== groupId) return false;
+      const start = moment.utc(c.startDate);
+      const end = moment.utc(c.endDate);
+      return start.isSameOrBefore(now) && end.isSameOrAfter(now);
+    });
+    if (!activeForGroup.length) {
+      return { success: false, message: '🚫 Nenhum desafio ativo encontrado para este grupo.' };
+    }
+    // Se houver mais de um, escolhe o de início mais recente
+    activeForGroup.sort((a, b) => moment.utc(b.startDate).valueOf() - moment.utc(a.startDate).valueOf());
+    return { success: true, challenge: activeForGroup[0] };
+  } catch (err) {
+    const backendMsg = err?.response?.data;
+    return { success: false, message: extractMessage(backendMsg, '❌ Erro ao obter o desafio ativo do grupo.') };
+  }
+}
+
+/**
+ * Busca os check-ins do usuário para um desafio específico
+ * GET /checkins/:userId/:challengeId => { checkins: ["YYYY-MM-DD", ...] }
+ * @param {{ userId: string, challengeId: string|number }} params
+ * @returns {Promise<{ success: boolean, checkins?: string[], message?: string }>}
+ */
+async function getUserCheckins({ userId, challengeId }) {
+  try {
+    const res = await api.get(`/checkins/${encodeURIComponent(userId)}/${encodeURIComponent(challengeId)}`);
+    const checkins = Array.isArray(res?.data?.checkins) ? res.data.checkins : [];
+    return { success: true, checkins };
+  } catch (err) {
+    const backendMsg = err?.response?.data;
+    return {
+      success: false,
+      message: extractMessage(backendMsg, '❌ Não foi possível obter seus check-ins.'),
+    };
+  }
+}
+
+/**
+ * Nova rota: GET /checkins/:senderWhatsAppId/group/:groupId => { checkins: ["YYYY-MM-DD", ...] }
+ * Se não houver desafio ativo para o groupId, retorna { checkins: [] }
+ * @param {{ senderWhatsAppId: string, groupId: string }} params
+ */
+async function getUserCheckinsByGroup({ senderWhatsAppId, groupId }) {
+  try {
+    const res = await api.get(`/checkins/${encodeURIComponent(senderWhatsAppId)}/group/${encodeURIComponent(groupId)}`);
+    const checkins = Array.isArray(res?.data?.checkins) ? res.data.checkins : [];
+    return { success: true, checkins };
+  } catch (err) {
+    const backendMsg = err?.response?.data;
+    return {
+      success: false,
+      message: extractMessage(backendMsg, '❌ Não foi possível obter seus check-ins.'),
+    };
+  }
+}
+
 module.exports = {
   registerCheckin,
   getRanking,
   addCategory,
   listCategories,
   listChallenges,
+  getActiveChallengeForGroup,
+  getUserCheckins,
+  getUserCheckinsByGroup,
 };

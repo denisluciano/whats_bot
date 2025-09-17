@@ -1,6 +1,8 @@
 const moment = require('moment-timezone');
+const { MessageMedia } = require('whatsapp-web.js');
 const { normalizeText } = require('../utils/textUtils');
-const { registerCheckin, getRanking: getRankingFromBackend, addCategory: addCategoryBackend, listCategories } = require('../services/backendService');
+const { generateMonthlyCalendarImage } = require('../utils/calendarImage');
+const { registerCheckin, getRanking: getRankingFromBackend, addCategory: addCategoryBackend, listCategories, getUserCheckinsByGroup } = require('../services/backendService');
 const LIMIT_DAYS_RETROACTIVE = process.env.LIMIT_DAYS_RETROACTIVE || 7;
 
 const handleMessage = async (client, message) => {   
@@ -103,6 +105,58 @@ const handleMessage = async (client, message) => {
             await client.sendMessage(message.from, response.message);
         } catch (err) {
             await client.sendMessage(message.from, '❌ Erro ao listar categorias.');
+        }
+    } else if (normalizedMessage.startsWith('!meuscheckins')) {
+        // Gera imagem de calendário com os check-ins do usuário para o desafio ativo
+        try {
+            // Aceita opcionalmente MM/YYYY como segundo argumento
+            const parts = message.body.trim().split(/\s+/);
+            let year, month; // month: 1-12
+            const tz = 'America/Sao_Paulo';
+            const nowTz = moment.tz(tz);
+            if (parts.length >= 2 && /^\d{2}\/\d{4}$/.test(parts[1])) {
+                const [mm, yyyy] = parts[1].split('/');
+                month = parseInt(mm, 10);
+                year = parseInt(yyyy, 10);
+                if (month < 1 || month > 12) {
+                    await client.sendMessage(message.from, '❌ Mês inválido. Use o formato MM/YYYY.');
+                    return;
+                }
+            } else {
+                year = nowTz.year();
+                month = nowTz.month() + 1; // moment month 0-11
+            }
+
+            // Busca check-ins diretamente pela nova rota
+            const { success: checksOk, checkins, message: checksMsg } = await getUserCheckinsByGroup({ senderWhatsAppId, groupId });
+            if (!checksOk) {
+                await client.sendMessage(message.from, checksMsg || '❌ Não foi possível obter seus check-ins.');
+                return;
+            }
+
+            // Filtra check-ins do mês/ano selecionado
+            const uniqueDates = Array.from(new Set(checkins || []));
+            const daysChecked = [];
+            for (const iso of uniqueDates) {
+                const d = moment.utc(iso);
+                const dTz = d.clone().tz(tz); // apresentar por TZ
+                if (dTz.year() === year && dTz.month() + 1 === month) {
+                    daysChecked.push(dTz.date());
+                }
+            }
+
+            const title = `Meus check-ins — ${('0' + month).slice(-2)}/${year}`;
+            const pngBuffer = await generateMonthlyCalendarImage({ year, month, checkedDays: daysChecked, title });
+            const base64 = pngBuffer.toString('base64');
+            const media = new MessageMedia('image/png', base64, 'meus-checkins.png');
+
+            const totalInMonth = moment({ year, month: month - 1 }).daysInMonth();
+            const caption = `🗓️ Seu calendário de check-ins (${('0'+month).slice(-2)}/${year})\n✅ Feitos: ${daysChecked.length} / ${totalInMonth}`;
+
+            await client.sendMessage(message.from, media, { caption });
+        } catch (err) {
+            console.error('Erro em !meuscheckins:', err);
+            await client.sendMessage(message.from, '❌ Erro ao gerar seu calendário de check-ins.');
         }
     }
 };
