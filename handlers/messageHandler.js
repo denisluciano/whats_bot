@@ -134,13 +134,13 @@ const handleMessage = async (client, message) => {
                 return;
             }
 
-            // Filtra check-ins do mês/ano selecionado
+            // Filtra check-ins do mês/ano selecionado (DATE puro no banco, sem hora)
+            // Para evitar deslocamento de um dia por timezone, interpretamos diretamente na TZ local
             const uniqueDates = Array.from(new Set(checkins || []));
             const daysChecked = [];
             for (const iso of uniqueDates) {
-                const d = moment.utc(iso);
-                const dTz = d.clone().tz(tz); // apresentar por TZ
-                if (dTz.year() === year && dTz.month() + 1 === month) {
+                const dTz = moment.tz(iso, 'YYYY-MM-DD', tz).startOf('day');
+                if (dTz.isValid() && dTz.year() === year && dTz.month() + 1 === month) {
                     daysChecked.push(dTz.date());
                 }
             }
