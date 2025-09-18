@@ -24,9 +24,9 @@ async function generateMonthlyCalendarImage({ year, month, checkedDays, title, u
   const firstDay = new Date(year, month - 1, 1);
   const lastDay = new Date(year, month, 0);
   const daysInMonth = lastDay.getDate();
-  // Monday-first index (0..6)
+  // Sunday-first index (0..6)
   const jsWeekday = firstDay.getDay(); // 0=Sun..6=Sat
-  const mondayFirstOffset = (jsWeekday + 6) % 7; // 0 if Monday
+  const mondayFirstOffset = jsWeekday; // 0 if Sunday
 
   const totalCells = Math.ceil((mondayFirstOffset + daysInMonth) / 7) * 7; // 35 or 42
 
@@ -147,13 +147,13 @@ async function generateMonthlyCalendarImage({ year, month, checkedDays, title, u
             </div>
           </div>
         <div class="weekdays">
+          <div class="day">Dom</div>
           <div class="day">Seg</div>
           <div class="day">Ter</div>
           <div class="day">Qua</div>
           <div class="day">Qui</div>
           <div class="day">Sex</div>
           <div class="day">Sáb</div>
-          <div class="day">Dom</div>
         </div>
         <div class="grid">
           ${cells.map(c => `
