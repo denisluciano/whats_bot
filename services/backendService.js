@@ -236,20 +236,28 @@ async function getUserCheckins({ userId, challengeId }) {
 }
 
 /**
- * Nova rota: GET /checkins/:senderWhatsAppId/group/:groupId => { checkins: ["YYYY-MM-DD", ...] }
- * Se não houver desafio ativo para o groupId, retorna { checkins: [] }
+ * Nova rota: GET /checkins/:senderWhatsAppId/group/:groupId
+ * Retorna: { checkins: ["YYYY-MM-DD", ...], challenge: { id, name, startDate, endDate } | null, user: { id, name } | null }
+ * - Se não houver desafio ativo para o groupId: { checkins: [], challenge: null, user: null }
+ * - Se usuário não for encontrado: { checkins: [], challenge: { ... }, user: null }
  * @param {{ senderWhatsAppId: string, groupId: string }} params
  */
 async function getUserCheckinsByGroup({ senderWhatsAppId, groupId }) {
   try {
     const res = await api.get(`/checkins/${encodeURIComponent(senderWhatsAppId)}/group/${encodeURIComponent(groupId)}`);
-    const checkins = Array.isArray(res?.data?.checkins) ? res.data.checkins : [];
-    return { success: true, checkins };
+    const data = res?.data || {};
+    const rawCheckins = Array.isArray(data.checkins) ? data.checkins : [];
+    // Remove duplicatas e preserva ordem de aparição
+    const checkins = Array.from(new Set(rawCheckins));
+    const challenge = data.challenge ?? null;
+    const user = data.user ?? null;
+    return { success: true, checkins, challenge, user };
   } catch (err) {
     const backendMsg = err?.response?.data;
     return {
       success: false,
       message: extractMessage(backendMsg, '❌ Não foi possível obter seus check-ins.'),
+      data: backendMsg,
     };
   }
 }

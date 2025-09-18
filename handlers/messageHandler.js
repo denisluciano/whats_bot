@@ -127,8 +127,8 @@ const handleMessage = async (client, message) => {
                 month = nowTz.month() + 1; // moment month 0-11
             }
 
-            // Busca check-ins diretamente pela nova rota
-            const { success: checksOk, checkins, message: checksMsg } = await getUserCheckinsByGroup({ senderWhatsAppId, groupId });
+            // Busca check-ins diretamente pela nova rota (também retorna challenge e user)
+            const { success: checksOk, checkins, challenge, user, message: checksMsg } = await getUserCheckinsByGroup({ senderWhatsAppId, groupId });
             if (!checksOk) {
                 await client.sendMessage(message.from, checksMsg || '❌ Não foi possível obter seus check-ins.');
                 return;
@@ -146,12 +146,13 @@ const handleMessage = async (client, message) => {
             }
 
             const title = `Meus check-ins — ${('0' + month).slice(-2)}/${year}`;
-            const pngBuffer = await generateMonthlyCalendarImage({ year, month, checkedDays: daysChecked, title });
+            const displayName = user?.name || userName;
+            const pngBuffer = await generateMonthlyCalendarImage({ year, month, checkedDays: daysChecked, title, userName: displayName, challenge });
             const base64 = pngBuffer.toString('base64');
             const media = new MessageMedia('image/png', base64, 'meus-checkins.png');
 
             const totalInMonth = moment({ year, month: month - 1 }).daysInMonth();
-            const caption = `🗓️ Seu calendário de check-ins (${('0'+month).slice(-2)}/${year})\n✅ Feitos: ${daysChecked.length} / ${totalInMonth}`;
+            const caption = `🗓️ Seu calendário de check-ins (${('0'+month).slice(-2)}/${year})\n${challenge?.name ? `🏁 Desafio: ${challenge.name}\n` : ''}✅ Feitos: ${daysChecked.length} / ${totalInMonth}`;
 
             await client.sendMessage(message.from, media, { caption });
         } catch (err) {
